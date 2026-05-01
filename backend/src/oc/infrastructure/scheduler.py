@@ -18,6 +18,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from oc.application.use_cases.alerts import notify_pending_alerts
 from oc.application.use_cases.compute_conjunctions import (
     ScreeningParameters,
     screen_population,
@@ -26,8 +27,13 @@ from oc.application.use_cases.refresh_tles import refresh_tles_from_url
 from oc.config import Settings, get_settings
 from oc.db import session_scope
 from oc.domain.entities import ConjunctionEvent, SatelliteState
+from oc.infrastructure.notifications import build_default_notifier
 from oc.infrastructure.numerics import ScipyBoundedMinimizer
-from oc.infrastructure.persistence import SQLAlchemyTLERepository
+from oc.infrastructure.persistence import (
+    SQLAlchemyAlertSubscriptionRepository,
+    SQLAlchemyConjunctionAlertSource,
+    SQLAlchemyTLERepository,
+)
 from oc.infrastructure.persistence.models import Conjunction
 from oc.infrastructure.propagation import SGP4Propagator
 from oc.infrastructure.tle_sources import CelestrakTLESource
@@ -133,6 +139,26 @@ async def persist_events(
         )
 
 
+async def notify_pending_alerts_job(settings: Settings | None = None) -> None:
+    """Deliver pending alerts to every active subscription."""
+    s = settings or get_settings()
+    notifier = build_default_notifier(s)
+    async with session_scope() as session:
+        repository = SQLAlchemyAlertSubscriptionRepository(session)
+        source = SQLAlchemyConjunctionAlertSource(session)
+        try:
+            delivered = await notify_pending_alerts(
+                now=datetime.now(UTC),
+                repository=repository,
+                source=source,
+                notifier=notifier,
+                horizon_days=s.alerts_horizon_days,
+            )
+            logger.info("alerts notify complete", extra={"delivered": delivered})
+        except Exception as exc:
+            logger.error("alerts notify failed", extra={"error": str(exc)})
+
+
 def build_scheduler(settings: Settings | None = None) -> AsyncIOScheduler:
     """Build (but do not start) an :class:`AsyncIOScheduler` with the jobs."""
     s = settings or get_settings()
@@ -150,6 +176,14 @@ def build_scheduler(settings: Settings | None = None) -> AsyncIOScheduler:
         trigger=IntervalTrigger(minutes=s.conjunction_refresh_interval_minutes),
         id="recompute_conjunctions",
         name="Conjunction recompute",
+        max_instances=1,
+        coalesce=True,
+    )
+    scheduler.add_job(
+        notify_pending_alerts_job,
+        trigger=IntervalTrigger(minutes=s.alerts_notify_interval_minutes),
+        id="notify_pending_alerts",
+        name="Alert notification dispatch",
         max_instances=1,
         coalesce=True,
     )
