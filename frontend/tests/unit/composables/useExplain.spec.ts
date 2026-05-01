@@ -14,7 +14,9 @@ const base: ConjunctionDetail = {
   tle_a_line1: 'A1',
   tle_a_line2: 'A2',
   tle_b_line1: 'B1',
-  tle_b_line2: 'B2'
+  tle_b_line2: 'B2',
+  tca_position_a: null,
+  tca_position_b: null
 };
 
 describe('explainConjunction', () => {

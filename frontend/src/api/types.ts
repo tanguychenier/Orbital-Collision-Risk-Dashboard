@@ -24,6 +24,12 @@ export interface Satellite extends SatelliteSummary {
   launch_date?: string;
 }
 
+export interface GeodeticTCAPosition {
+  latitude_deg: number;
+  longitude_deg: number;
+  altitude_km: number;
+}
+
 export interface ConjunctionListItem {
   id: string;
   sat_a: SatelliteSummary;
@@ -33,6 +39,8 @@ export interface ConjunctionListItem {
   relative_velocity_km_s: number;
   probability: number;
   computed_at: string;
+  tca_position_a: GeodeticTCAPosition | null;
+  tca_position_b: GeodeticTCAPosition | null;
 }
 
 export interface ConjunctionDetail extends ConjunctionListItem {

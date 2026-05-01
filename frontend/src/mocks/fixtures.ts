@@ -59,6 +59,14 @@ const TLE_A_LINE2 = '2 44713  53.0537  61.4982 0001296  82.5921 277.5247 15.0639
 const TLE_B_LINE1 = '1 50189U 22002BX  26121.84305556  .00001503  00000-0  10245-3 0  9994';
 const TLE_B_LINE2 = '2 50189  87.4051 122.6033 0002067 113.6611 246.4892 13.16498234198114';
 
+// Pseudo-deterministic geographic distribution used only by the
+// browser-side mocks: the real backend computes positions from sgp4.
+function mockTcaPosition(seed: number, altKm: number) {
+  const lon = ((seed * 73) % 360) - 180;
+  const lat = ((seed * 41) % 140) - 70;
+  return { latitude_deg: lat, longitude_deg: lon, altitude_km: altKm };
+}
+
 function makeConjunction(
   index: number,
   satA: Satellite,
@@ -69,6 +77,11 @@ function makeConjunction(
   probability: number
 ): ConjunctionListItem {
   const tca = new Date(Date.now() + hoursAhead * 3_600_000).toISOString();
+  const baseSeed = (satA.norad_id + satB.norad_id) | 0;
+  // Mock both satellites at typical LEO altitudes near each other so
+  // the rendered globe shows a sensible scene during local development.
+  const altA = 540 + (baseSeed % 60);
+  const altB = altA + (missKm < 1 ? 0.001 : 0.005);
   return {
     id: `conj-${String(index).padStart(4, '0')}`,
     sat_a: { norad_id: satA.norad_id, name: satA.name },
@@ -77,7 +90,9 @@ function makeConjunction(
     miss_distance_km: missKm,
     relative_velocity_km_s: velocity,
     probability,
-    computed_at: new Date().toISOString()
+    computed_at: new Date().toISOString(),
+    tca_position_a: mockTcaPosition(baseSeed, altA),
+    tca_position_b: mockTcaPosition(baseSeed + 13, altB)
   };
 }
 

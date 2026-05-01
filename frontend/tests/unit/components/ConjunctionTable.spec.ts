@@ -13,7 +13,9 @@ const rows: ConjunctionListItem[] = [
     miss_distance_km: 0.5,
     relative_velocity_km_s: 14,
     probability: 0.001,
-    computed_at: '2026-05-01T00:00:00Z'
+    computed_at: '2026-05-01T00:00:00Z',
+    tca_position_a: null,
+    tca_position_b: null
   },
   {
     id: 'c2',
@@ -23,7 +25,9 @@ const rows: ConjunctionListItem[] = [
     miss_distance_km: 4.5,
     relative_velocity_km_s: 9,
     probability: 0.0001,
-    computed_at: '2026-05-01T00:00:00Z'
+    computed_at: '2026-05-01T00:00:00Z',
+    tca_position_a: null,
+    tca_position_b: null
   }
 ];
 

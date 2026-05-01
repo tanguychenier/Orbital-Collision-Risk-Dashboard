@@ -27,23 +27,15 @@ const MAX_PLOTTED_CONJUNCTIONS = 50;
 // instead of the default cyan. Mirrors the backend triage threshold.
 const HIGH_RISK_MISS_KM = 1;
 
-// Pseudo-randomisation moduli used to scatter the synthetic markers
-// across the globe when no real ECEF position is available.
-const LON_MOD = 360;
-const LAT_MOD = 140;
-const LON_MULTIPLIER = 7;
-const LAT_MULTIPLIER = 3;
-const LON_OFFSET = 180;
-const LAT_OFFSET = 70;
-
 // Marker geometry. Heights are in metres (Cartesian3.fromDegrees expects
 // metres for the third argument); pixel sizes are device-independent.
-const MARKER_HEIGHT_M = 550_000;
+const KM_TO_M = 1000;
 const POINT_PIXEL_SIZE = 9;
 const POINT_PIXEL_SIZE_HIGHLIGHTED = 16;
 const POINT_OUTLINE_WIDTH = 1;
 const LABEL_OFFSET_PX = -12;
 const LABEL_OUTLINE_WIDTH = 2;
+const POLYLINE_WIDTH_PX = 1.5;
 
 const COLOR_BACKGROUND = '#020617';
 const COLOR_HIGH_RISK = '#ef4444';
@@ -100,24 +92,38 @@ export async function createGlobe(opts: InitOptions): Promise<CesiumViewerHandle
   const entityById = new Map<string, ReturnType<typeof viewer.entities.add>>();
 
   for (const c of opts.conjunctions.slice(0, MAX_PLOTTED_CONJUNCTIONS)) {
-    const seed = (c.sat_a.norad_id + c.sat_b.norad_id) % LON_MOD;
-    const lon = ((seed * LON_MULTIPLIER) % LON_MOD) - LON_OFFSET;
-    const lat = ((seed * LAT_MULTIPLIER) % LAT_MOD) - LAT_OFFSET;
-    const position = Cesium.Cartesian3.fromDegrees(lon, lat, MARKER_HEIGHT_M);
+    // Conjunctions whose TLEs failed to propagate carry a null position
+    // pair; skip them rather than placing them at an arbitrary point so
+    // the scene stays truthful (markers reflect actual orbital state).
+    if (c.tca_position_a === null || c.tca_position_b === null) continue;
+
+    const a = Cesium.Cartesian3.fromDegrees(
+      c.tca_position_a.longitude_deg,
+      c.tca_position_a.latitude_deg,
+      c.tca_position_a.altitude_km * KM_TO_M
+    );
+    const b = Cesium.Cartesian3.fromDegrees(
+      c.tca_position_b.longitude_deg,
+      c.tca_position_b.latitude_deg,
+      c.tca_position_b.altitude_km * KM_TO_M
+    );
+    // Encounter-point marker: midpoint between the two satellites at TCA.
+    const midpoint = Cesium.Cartesian3.midpoint(a, b, new Cesium.Cartesian3());
+    const isHighRisk = c.miss_distance_km < HIGH_RISK_MISS_KM;
+    const colorHex = isHighRisk ? COLOR_HIGH_RISK : COLOR_NORMAL;
+    const color = Cesium.Color.fromCssColorString(colorHex);
+
     const entity = viewer.entities.add({
       id: c.id,
-      position,
+      position: midpoint,
       point: {
         pixelSize: POINT_PIXEL_SIZE,
-        color:
-          c.miss_distance_km < HIGH_RISK_MISS_KM
-            ? Cesium.Color.fromCssColorString(COLOR_HIGH_RISK)
-            : Cesium.Color.fromCssColorString(COLOR_NORMAL),
+        color,
         outlineColor: Cesium.Color.WHITE,
         outlineWidth: POINT_OUTLINE_WIDTH
       },
       label: {
-        text: c.sat_a.name,
+        text: `${c.sat_a.name} ↔ ${c.sat_b.name}`,
         font: '12px Inter, sans-serif',
         fillColor: Cesium.Color.WHITE,
         outlineWidth: LABEL_OUTLINE_WIDTH,
@@ -126,6 +132,12 @@ export async function createGlobe(opts: InitOptions): Promise<CesiumViewerHandle
         pixelOffset: new Cesium.Cartesian2(0, LABEL_OFFSET_PX),
         showBackground: true,
         backgroundColor: Cesium.Color.fromCssColorString(COLOR_LABEL_BG)
+      },
+      polyline: {
+        positions: [a, b],
+        width: POLYLINE_WIDTH_PX,
+        material: color,
+        arcType: Cesium.ArcType.NONE
       }
     });
     entityById.set(c.id, entity);
