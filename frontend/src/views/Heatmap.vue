@@ -7,6 +7,12 @@ import {
   fetchAltitudeInclinationHeatmap,
   fetchConjunctionsTimeline
 } from '@/api/heatmap';
+import {
+  buildInsights,
+  formatAltitudeInsight,
+  formatInclinationInsight,
+  formatTrendInsight
+} from '@/composables/useHeatmapInsights';
 
 // Lazy-load the ECharts wrappers so the dashboard route's bundle is not
 // burdened with the visualisation library when the user never opens this view.
@@ -32,6 +38,12 @@ const timelineQuery = useQuery({
 
 const matrix = computed(() => heatmapQuery.data.value ?? null);
 const timeline = computed(() => timelineQuery.data.value ?? []);
+
+const insights = computed(() => buildInsights(matrix.value, timeline.value));
+
+const altitudeText = computed(() => formatAltitudeInsight(insights.value.altitude));
+const inclinationText = computed(() => formatInclinationInsight(insights.value.inclination));
+const trendText = computed(() => formatTrendInsight(insights.value.trend));
 
 const heatmapLoading = computed(() => heatmapQuery.isLoading.value);
 const timelineLoading = computed(() => timelineQuery.isLoading.value);
@@ -89,6 +101,19 @@ const timelineError = computed(() => timelineQuery.isError.value);
           Failed to load conjunctions timeline.
         </p>
         <ConjunctionsTimelineChart :points="timeline" :loading="timelineLoading" />
+      </section>
+
+      <section
+        class="rounded-lg border border-white/10 bg-black/30 backdrop-blur p-4"
+        aria-label="Heatmap insights"
+        data-testid="insights-panel"
+      >
+        <h2 class="text-base font-medium mb-3">Insights</h2>
+        <ul class="space-y-2 text-sm text-white/85" data-testid="insights-list">
+          <li data-testid="insight-altitude">{{ altitudeText }}</li>
+          <li data-testid="insight-inclination">{{ inclinationText }}</li>
+          <li data-testid="insight-trend">{{ trendText }}</li>
+        </ul>
       </section>
     </main>
 
