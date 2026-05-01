@@ -13,9 +13,10 @@ interface Props {
   rows: ConjunctionListItem[];
   loading?: boolean;
   maxDistanceKm: number;
+  hours?: number;
 }
 
-const props = withDefaults(defineProps<Props>(), { loading: false });
+const props = withDefaults(defineProps<Props>(), { loading: false, hours: 72 });
 
 const emit = defineEmits<{
   (e: 'select', id: string): void;
@@ -23,6 +24,13 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+
+const csvUrl = computed(
+  () => `/api/conjunctions.csv?max_distance_km=${props.maxDistanceKm}&hours=${props.hours}`
+);
+const calendarUrl = computed(
+  () => `/api/calendar.ics?max_distance_km=${props.maxDistanceKm}&hours=${props.hours}`
+);
 
 const sliderValue = computed<number>({
   get: () => props.maxDistanceKm,
@@ -77,6 +85,37 @@ function onSort(_e: DataTableSortEvent) {
         <p class="text-xs text-white/50 mt-0.5">
           {{ rows.length }} events &middot; max distance {{ maxDistanceKm.toFixed(1) }} km
         </p>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <a
+          :href="csvUrl"
+          download="conjunctions.csv"
+          class="inline-flex"
+          data-testid="export-csv"
+          :aria-label="t('table.exportCsv')"
+        >
+          <Button
+            severity="secondary"
+            text
+            size="small"
+            icon="pi pi-file-export"
+            :label="t('table.exportCsv')"
+          />
+        </a>
+        <a
+          :href="calendarUrl"
+          class="inline-flex"
+          data-testid="export-ical"
+          :aria-label="t('table.subscribeCalendar')"
+        >
+          <Button
+            severity="secondary"
+            text
+            size="small"
+            icon="pi pi-calendar"
+            :label="t('table.subscribeCalendar')"
+          />
+        </a>
       </div>
       <div class="w-full sm:w-72">
         <label class="block text-xs text-white/60 mb-1" for="max-distance-slider">

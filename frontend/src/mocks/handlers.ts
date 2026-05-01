@@ -111,6 +111,76 @@ export const handlers = [
     return HttpResponse.json(filtered.slice(offset, offset + limit));
   }),
 
+  http.get(`${API}/conjunctions.csv`, ({ request }) => {
+    const url = new URL(request.url);
+    const max = Number(url.searchParams.get('max_distance_km') ?? 5);
+    const hours = Number(url.searchParams.get('hours') ?? 72);
+    const cutoff = Date.now() + hours * 3_600_000;
+    const filtered = mockConjunctions.filter(
+      (c) => c.miss_distance_km <= max && new Date(c.tca).getTime() <= cutoff
+    );
+    const header =
+      'id,tca_utc,miss_distance_km,relative_velocity_km_s,probability,' +
+      'sat_a_norad_id,sat_a_name,sat_a_lat_deg,sat_a_lon_deg,sat_a_alt_km,' +
+      'sat_b_norad_id,sat_b_name,sat_b_lat_deg,sat_b_lon_deg,sat_b_alt_km';
+    const rows = filtered.map((c) => {
+      const a = c.tca_position_a;
+      const b = c.tca_position_b;
+      return [
+        c.id,
+        c.tca,
+        c.miss_distance_km.toFixed(4),
+        c.relative_velocity_km_s.toFixed(4),
+        c.probability.toExponential(6),
+        c.sat_a.norad_id,
+        c.sat_a.name,
+        a ? a.latitude_deg.toFixed(6) : '',
+        a ? a.longitude_deg.toFixed(6) : '',
+        a ? a.altitude_km.toFixed(3) : '',
+        c.sat_b.norad_id,
+        c.sat_b.name,
+        b ? b.latitude_deg.toFixed(6) : '',
+        b ? b.longitude_deg.toFixed(6) : '',
+        b ? b.altitude_km.toFixed(3) : ''
+      ].join(',');
+    });
+    return new HttpResponse(`${header}\n${rows.join('\n')}\n`, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="conjunctions.csv"'
+      }
+    });
+  }),
+
+  http.get(`${API}/calendar.ics`, ({ request }) => {
+    const url = new URL(request.url);
+    const max = Number(url.searchParams.get('max_distance_km') ?? 5);
+    const hours = Number(url.searchParams.get('hours') ?? 168);
+    const cutoff = Date.now() + hours * 3_600_000;
+    const filtered = mockConjunctions.filter(
+      (c) => c.miss_distance_km <= max && new Date(c.tca).getTime() <= cutoff
+    );
+    const fmt = (iso: string) =>
+      new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+    const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//mock//EN'];
+    for (const c of filtered) {
+      lines.push(
+        'BEGIN:VEVENT',
+        `UID:${c.id}@orbital-conjunctions`,
+        `DTSTART:${fmt(c.tca)}`,
+        `DTEND:${fmt(new Date(new Date(c.tca).getTime() + 60_000).toISOString())}`,
+        `SUMMARY:Conjunction: ${c.sat_a.name} <-> ${c.sat_b.name} (${c.miss_distance_km.toFixed(2)} km)`,
+        'END:VEVENT'
+      );
+    }
+    lines.push('END:VCALENDAR');
+    return new HttpResponse(lines.join('\r\n') + '\r\n', {
+      status: 200,
+      headers: { 'Content-Type': 'text/calendar; charset=utf-8' }
+    });
+  }),
+
   http.get(`${API}/conjunctions/:id`, ({ params }) => {
     const id = String(params.id);
     const detail = mockConjunctionDetails[id];

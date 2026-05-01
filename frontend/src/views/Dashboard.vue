@@ -93,6 +93,7 @@ const showGlobe = computed(() => {
           :rows="conjunctions"
           :loading="isLoading"
           :max-distance-km="filters.maxDistanceKm"
+          :hours="filters.hours"
           @select="handleSelect"
           @update:max-distance-km="setMaxDistance"
         />

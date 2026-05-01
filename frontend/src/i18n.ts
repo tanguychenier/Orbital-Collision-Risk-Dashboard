@@ -28,7 +28,9 @@ const messages = {
       probability: 'Probability',
       maxDistance: 'Max miss distance (km)',
       empty: 'No conjunctions matching the current filters.',
-      view: 'View details'
+      view: 'View details',
+      exportCsv: 'CSV',
+      subscribeCalendar: 'Calendar feed'
     },
     globe: {
       title: '3D situational view',
