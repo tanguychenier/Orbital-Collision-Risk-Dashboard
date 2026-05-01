@@ -4,7 +4,10 @@
 
 Please **do not** open a public GitHub issue for a security bug.
 
-Instead, email **`22911157+tanguychenier@users.noreply.github.com`** with:
+Instead, open a **GitHub Security Advisory** here:
+<https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard/security/advisories/new>
+
+Include:
 
 - A description of the vulnerability and its potential impact.
 - Steps to reproduce, ideally with a minimal proof of concept.

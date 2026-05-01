@@ -1,8 +1,4 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
-
 const links = [
   {
     label: 'LinkedIn - Tanguy Chénier',
@@ -35,30 +31,20 @@ const links = [
     id="about"
   >
     <div
-      class="mx-auto max-w-screen-2xl px-4 py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm text-white/70"
+      class="mx-auto max-w-screen-2xl px-4 py-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-white/70"
     >
-      <div>
-        <p class="font-semibold text-white">
-          {{ t('footer.builtBy') }} Tansoftware &middot; {{ t('footer.author') }}
-        </p>
-        <p class="text-xs text-white/50">
-          {{ t('app.tagline') }}
-        </p>
-      </div>
-      <ul class="flex flex-wrap gap-x-4 gap-y-2">
-        <li v-for="link in links" :key="link.href">
-          <a
-            :href="link.href"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-2 hover:text-cyan-300 transition focus-ring"
-            :aria-label="link.label"
-          >
-            <i :class="link.icon" aria-hidden="true" />
-            <span>{{ link.label }}</span>
-          </a>
-        </li>
-      </ul>
+      <a
+        v-for="link in links"
+        :key="link.href"
+        :href="link.href"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 hover:text-cyan-300 transition focus-ring"
+        :aria-label="link.label"
+      >
+        <i :class="link.icon" aria-hidden="true" />
+        <span>{{ link.label }}</span>
+      </a>
     </div>
   </footer>
 </template>

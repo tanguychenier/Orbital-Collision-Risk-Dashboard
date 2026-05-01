@@ -1,4 +1,10 @@
-/* Lazy-loaded Cesium service. Imports the heavy library only when called. */
+/* Cesium service. Imports the library statically: lazy `import('cesium')`
+ * triggers a Temporal-Dead-Zone error in the production bundle because of
+ * Cesium's internal cyclic dependencies. Static import side-steps it; the
+ * heavy chunks are still split off via Vite's default code-splitting and
+ * Cesium's CSS is loaded once on first call. */
+import * as Cesium from 'cesium';
+import 'cesium/Build/Cesium/Widgets/widgets.css';
 import type { ConjunctionListItem } from '@/api/types';
 
 export interface CesiumViewerHandle {
@@ -45,9 +51,6 @@ const COLOR_NORMAL = '#22d3ee';
 const COLOR_LABEL_BG = 'rgba(15,23,42,0.7)';
 
 export async function createGlobe(opts: InitOptions): Promise<CesiumViewerHandle> {
-  const Cesium = await import('cesium');
-  await import('cesium/Build/Cesium/Widgets/widgets.css');
-
   // Use a public default ion token only if user provided one
   const ionToken = (import.meta.env.VITE_CESIUM_ION_TOKEN as string | undefined) ?? '';
   if (ionToken) {
