@@ -34,9 +34,9 @@ Thumbs.db
 .gitignore
 .gitattributes
 
-# Documentation and configuration that has no place in the image.
-README.md
-*.md
+# Configuration that has no place in the runtime image.
+# README.md is required by pyproject.toml `readme = "README.md"` so it
+# stays in the build context; the wheel build needs to read it.
 docker-compose*.yml
 
 # Local databases and env files.
