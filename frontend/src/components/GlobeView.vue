@@ -74,7 +74,7 @@ onBeforeUnmount(() => {
     role="region"
     :aria-label="t('globe.title')"
   >
-    <div ref="containerRef" class="absolute inset-0" aria-hidden="true" />
+    <div ref="containerRef" class="absolute inset-0" />
     <div
       v-if="loading"
       class="absolute inset-0 grid place-items-center bg-slate-950/80 text-white/80"
