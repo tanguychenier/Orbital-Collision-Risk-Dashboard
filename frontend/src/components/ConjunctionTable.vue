@@ -31,18 +31,28 @@ const sliderValue = computed<number>({
 
 const sortedRows = computed(() => [...props.rows]);
 
+// Risk-band thresholds in kilometres. The cutoffs match the screening
+// triage convention used elsewhere in the codebase (see backend
+// `_HIGH_RISK_MISS_THRESHOLD_KM` for the 1 km value).
+const HIGH_RISK_KM = 1;
+const ELEVATED_RISK_KM = 2.5;
+const NOTABLE_RISK_KM = 5;
+const TCA_DATETIME_LENGTH = 19; // length of "YYYY-MM-DD HH:MM:SS"
+
+type Severity = 'danger' | 'warn' | 'info' | 'success';
+
 function formatTca(iso: string): string {
   try {
-    return new Date(iso).toISOString().replace('T', ' ').slice(0, 19);
+    return new Date(iso).toISOString().replace('T', ' ').slice(0, TCA_DATETIME_LENGTH);
   } catch {
     return iso;
   }
 }
 
-function tagSeverity(missKm: number): 'danger' | 'warn' | 'info' | 'success' {
-  if (missKm < 1) return 'danger';
-  if (missKm < 2.5) return 'warn';
-  if (missKm < 5) return 'info';
+function tagSeverity(missKm: number): Severity {
+  if (missKm < HIGH_RISK_KM) return 'danger';
+  if (missKm < ELEVATED_RISK_KM) return 'warn';
+  if (missKm < NOTABLE_RISK_KM) return 'info';
   return 'success';
 }
 

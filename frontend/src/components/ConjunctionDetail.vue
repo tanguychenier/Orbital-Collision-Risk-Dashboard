@@ -23,6 +23,10 @@ const emit = defineEmits<{ (e: 'update:modelValue', value: boolean): void }>();
 
 const { t } = useI18n();
 
+// Distance below which the dialog tags the event as "danger" rather
+// than "warn". Mirrors the backend triage threshold.
+const HIGH_RISK_MISS_KM = 1;
+
 const idRef = computed(() => props.conjunctionId);
 const { data, isLoading } = useConjunctionDetail(idRef);
 
@@ -71,7 +75,7 @@ function riskSeverity(level: 'low' | 'moderate' | 'elevated' | 'high'): string {
         <div class="flex items-center gap-2">
           <Tag
             :value="`${data.miss_distance_km.toFixed(2)} km`"
-            :severity="data.miss_distance_km < 1 ? 'danger' : 'warn'"
+            :severity="data.miss_distance_km < HIGH_RISK_MISS_KM ? 'danger' : 'warn'"
           />
           <Tag
             v-if="explanation"
