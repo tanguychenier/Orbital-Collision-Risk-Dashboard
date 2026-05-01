@@ -14,6 +14,8 @@ from typing import Protocol, runtime_checkable
 
 from oc.domain.entities import (
     ConjunctionEvent,
+    ConjunctionTimelinePoint,
+    OrbitalBin,
     ParsedTLE,
     SatelliteRecord,
     TLERecord,
@@ -52,11 +54,56 @@ class TLERepository(Protocol):
 
 
 @runtime_checkable
+class SatelliteRepository(Protocol):
+    """Persistence boundary for satellite lookups exposed by the public API."""
+
+    async def find_by_identifier(
+        self, identifier: str
+    ) -> tuple[SatelliteRecord, TLERecord | None] | None:
+        """Resolve a NORAD id (digits) or exact name to a satellite + last TLE."""
+
+    async def search(self, query: str | None, limit: int) -> Sequence[SatelliteRecord]:
+        """Return up to ``limit`` satellites matching ``query`` (fuzzy on name, exact on id)."""
+
+
+@runtime_checkable
 class ConjunctionRepository(Protocol):
     """Persistence boundary for the ``conjunctions`` table."""
 
     async def replace_all(self, events: Sequence[ConjunctionEvent]) -> None:
         """Atomically replace the table contents with ``events``."""
+
+
+@runtime_checkable
+class HeatmapRepository(Protocol):
+    """Persistence boundary for the orbital congestion heatmap.
+
+    Adapters are responsible for translating the persisted TLE pairs into
+    a stream of :class:`OrbitalBin` instances and aggregating the
+    conjunctions table by day. Keeping the bin extraction on the adapter
+    side lets the SQL adapter use ``GROUP BY`` for the timeline aggregation
+    and a single tight loop in Python for the binning, both of which keep
+    the endpoint well under the 200 ms budget at 30 000 satellites.
+    """
+
+    async def list_active_orbital_bins(self) -> Sequence[OrbitalBin]:
+        """Return one :class:`OrbitalBin` per active tracked satellite.
+
+        Implementations should consume the most-recent TLE per active
+        satellite and propagate it to derive ``altitude_km`` and
+        ``inclination_deg``. The order of the returned sequence is not
+        significant.
+        """
+
+    async def conjunctions_per_day(
+        self, start: datetime, end: datetime
+    ) -> Sequence[ConjunctionTimelinePoint]:
+        """Aggregate the ``conjunctions`` table by calendar day in ``[start, end]``.
+
+        Implementations must return one :class:`ConjunctionTimelinePoint`
+        per day in the inclusive range, even when no conjunction
+        materialised on that day (counts then default to ``0``).
+        """
 
 
 @runtime_checkable
