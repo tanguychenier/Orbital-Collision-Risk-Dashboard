@@ -53,6 +53,28 @@ const messages = {
     },
     error: {
       generic: 'Something went wrong while contacting the API.'
+    },
+    search: {
+      placeholder: 'Search a satellite...',
+      empty: 'No satellite matches.'
+    },
+    satellite: {
+      back: 'Back to dashboard',
+      norad: 'NORAD ID',
+      country: 'Country',
+      type: 'Type',
+      launchDate: 'Launch date',
+      lastTleEpoch: 'Last TLE epoch',
+      stats: {
+        next24h: 'Conjunctions (next 24 h)',
+        next72h: 'Conjunctions (next 72 h)',
+        next7d: 'Conjunctions (next 7 d)'
+      },
+      upcoming: 'Upcoming conjunctions',
+      copyPermalink: 'Copy permalink',
+      permalinkCopied: 'Permalink copied to clipboard',
+      notFound: 'Satellite not found.',
+      loading: 'Loading satellite...'
     }
   }
 };
