@@ -74,10 +74,19 @@ jobs:
         run: pnpm test
 
       - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium firefox
 
       - name: E2E tests (playwright)
-        run: pnpm test:e2e
+        # Edge uses the Microsoft Edge channel which is unavailable on
+        # GitHub-hosted Linux runners; we run only the chrome-* and
+        # firefox-* projects in CI. Edge shares its engine with Chrome
+        # so the developer machine's headed run covers it.
+        env:
+          CI: "true"
+        run: >-
+          pnpm test:e2e
+          --project=chrome-mobile  --project=chrome-tablet  --project=chrome-desktop
+          --project=firefox-mobile --project=firefox-tablet --project=firefox-desktop
 
       - name: Upload e2e artifacts (screenshots + report)
         if: always()

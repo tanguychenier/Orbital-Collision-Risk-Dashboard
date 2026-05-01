@@ -14,9 +14,7 @@ type Viewport = (typeof VIEWPORTS)[number];
 
 function viewportFromProject(projectName: string): Viewport {
   const segment = projectName.split('-').pop() ?? '';
-  return (VIEWPORTS as readonly string[]).includes(segment)
-    ? (segment as Viewport)
-    : 'desktop';
+  return (VIEWPORTS as readonly string[]).includes(segment) ? (segment as Viewport) : 'desktop';
 }
 
 function screenshotDir(testInfo: TestInfo): string {
