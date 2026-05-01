@@ -5,7 +5,10 @@ import type {
   ConjunctionQuery,
   HealthResponse,
   Satellite,
+  SatelliteConjunctionsQuery,
+  SatelliteDetailResponse,
   SatelliteQuery,
+  SatelliteSearchQuery,
   StatsResponse
 } from './types';
 
@@ -33,5 +36,30 @@ export async function fetchConjunctions(
 
 export async function fetchConjunctionDetail(id: string): Promise<ConjunctionDetail> {
   const { data } = await apiClient.get<ConjunctionDetail>(`/conjunctions/${id}`);
+  return data;
+}
+
+export async function searchSatellites(
+  params: SatelliteSearchQuery = {}
+): Promise<Satellite[]> {
+  const { data } = await apiClient.get<Satellite[]>('/satellites/search', { params });
+  return data;
+}
+
+export async function fetchSatelliteDetail(
+  identifier: string | number
+): Promise<SatelliteDetailResponse> {
+  const { data } = await apiClient.get<SatelliteDetailResponse>(`/satellites/${identifier}`);
+  return data;
+}
+
+export async function fetchSatelliteConjunctions(
+  identifier: string | number,
+  params: SatelliteConjunctionsQuery = {}
+): Promise<ConjunctionListItem[]> {
+  const { data } = await apiClient.get<ConjunctionListItem[]>(
+    `/satellites/${identifier}/conjunctions`,
+    { params }
+  );
   return data;
 }
