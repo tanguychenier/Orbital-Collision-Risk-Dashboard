@@ -1,0 +1,59 @@
+# ----------------------------------------------------------------------------
+# Orbital Collision Risk Dashboard
+# Real-time public view of satellite conjunction risk.
+#
+#   docker compose up -d
+#   open http://localhost:5173      (frontend)
+#        http://localhost:8000/docs (FastAPI Swagger)
+# ----------------------------------------------------------------------------
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ocrd-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ocrd}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ocrd}
+      POSTGRES_DB: ${POSTGRES_DB:-ocrd}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ocrd}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ocrd-backend
+    environment:
+      OC_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ocrd}:${POSTGRES_PASSWORD:-ocrd}@postgres:5432/${POSTGRES_DB:-ocrd}
+      OC_ENABLE_SCHEDULER: "true"
+      OC_LOG_LEVEL: "info"
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000/api}
+        VITE_USE_MSW: ${VITE_USE_MSW:-false}
+    container_name: ocrd-frontend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: ocrd-postgres-data

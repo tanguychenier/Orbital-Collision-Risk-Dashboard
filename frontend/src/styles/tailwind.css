@@ -1,0 +1,51 @@
+@import 'tailwindcss';
+@plugin 'tailwindcss-primeui';
+
+@theme {
+  --color-bg-base: #0b1120;
+  --color-surface: #111827;
+  --color-surface-2: #1f2937;
+  --color-accent: #22d3ee;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-ok: #10b981;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html,
+  body,
+  #app {
+    @apply h-full;
+  }
+  body {
+    background: var(--p-content-background, #0b1120);
+    color: var(--p-text-color, #e5e7eb);
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  }
+  :root {
+    color-scheme: dark;
+  }
+  :root.light {
+    color-scheme: light;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  .glow-accent {
+    box-shadow: 0 0 30px rgba(34, 211, 238, 0.25);
+  }
+  .focus-ring:focus-visible {
+    outline: 2px solid #22d3ee;
+    outline-offset: 2px;
+    border-radius: 0.375rem;
+  }
+}
+
+/* PrimeVue dark mode toggle hook */
+.app-dark {
+  color-scheme: dark;
+}
