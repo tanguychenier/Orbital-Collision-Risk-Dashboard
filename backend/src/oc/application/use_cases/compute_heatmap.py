@@ -6,14 +6,20 @@ inclination (columns, 5 degree steps in ``[0, 180]``). The use case sits
 strictly in the application layer: it depends on a repository port and
 returns framework-agnostic dataclasses. The HTTP adapter is responsible
 for serialising the result.
+
+The companion ``compute_conjunctions_timeline`` use case wraps the
+day-bucket aggregation exposed by the same repository port. It exists in
+this module so the two heatmap-flavoured use cases live next to each
+other.
 """
 
 from __future__ import annotations
 
 import math
 from collections.abc import Iterable
+from datetime import UTC, date, datetime, timedelta
 
-from oc.application.ports import HeatmapRepository
+from oc.application.ports import Clock, HeatmapRepository
 from oc.domain.entities import (
     HEATMAP_ALTITUDE_MAX_KM,
     HEATMAP_ALTITUDE_MIN_KM,
@@ -21,6 +27,7 @@ from oc.domain.entities import (
     HEATMAP_INCLINATION_MAX_DEG,
     HEATMAP_INCLINATION_MIN_DEG,
     HEATMAP_INCLINATION_STEP_DEG,
+    ConjunctionTimelinePoint,
     HeatmapMatrix,
     OrbitalBin,
 )
@@ -115,3 +122,70 @@ async def compute_heatmap(repository: HeatmapRepository) -> HeatmapMatrix:
     """
     bins = await repository.list_active_orbital_bins()
     return aggregate_orbital_bins(bins)
+
+
+def _utcnow() -> datetime:
+    """Return a timezone-aware UTC ``datetime`` (overridable in tests)."""
+    return datetime.now(UTC)
+
+
+def _start_of_day_utc(when: datetime) -> datetime:
+    """Return the UTC midnight at the start of ``when``'s calendar day."""
+    aware = when if when.tzinfo is not None else when.replace(tzinfo=UTC)
+    return datetime(aware.year, aware.month, aware.day, tzinfo=UTC)
+
+
+def _fill_missing_days(
+    points: Iterable[ConjunctionTimelinePoint],
+    start_day: date,
+    end_day: date,
+) -> tuple[ConjunctionTimelinePoint, ...]:
+    """Pad ``points`` with zero-count entries for any missing day in ``[start, end]``."""
+    by_day = {p.date: p for p in points}
+    out: list[ConjunctionTimelinePoint] = []
+    cursor = start_day
+    while cursor <= end_day:
+        out.append(
+            by_day.get(
+                cursor,
+                ConjunctionTimelinePoint(
+                    date=cursor,
+                    miss_lt_1km=0,
+                    miss_lt_5km=0,
+                    total=0,
+                ),
+            )
+        )
+        cursor = cursor + timedelta(days=1)
+    return tuple(out)
+
+
+# Cap the timeline window to keep the response payload predictable. A
+# month is more than enough for a daily-resolution chart and matches the
+# default the dashboard surface offers.
+_MAX_TIMELINE_DAYS: int = 365
+
+
+async def compute_conjunctions_timeline(
+    repository: HeatmapRepository,
+    days: int,
+    *,
+    clock: Clock | None = None,
+) -> tuple[ConjunctionTimelinePoint, ...]:
+    """Aggregate ``conjunctions`` per UTC day over the past ``days`` days.
+
+    The window is closed at the start of *tomorrow* so the current day is
+    included in the result. The repository is free to return entries in
+    any order; the use case sorts ascending by date and pads missing days
+    with zeros.
+    """
+    if days <= 0:
+        raise ValueError("days must be positive")
+    if days > _MAX_TIMELINE_DAYS:
+        raise ValueError(f"days must be <= {_MAX_TIMELINE_DAYS}")
+    now = clock.now() if clock is not None else _utcnow()
+    end = _start_of_day_utc(now) + timedelta(days=1)
+    start = end - timedelta(days=days)
+    points = await repository.conjunctions_per_day(start, end)
+    padded = _fill_missing_days(points, start.date(), end.date() - timedelta(days=1))
+    return tuple(sorted(padded, key=lambda p: p.date))

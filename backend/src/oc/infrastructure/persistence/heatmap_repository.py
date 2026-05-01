@@ -1,8 +1,9 @@
 """SQLAlchemy adapter for the heatmap repository port.
 
-This adapter translates persisted ``Satellite``/``TLE`` rows into the
-framework-agnostic :class:`OrbitalBin` dataclass consumed by the heatmap
-use case.
+This adapter translates persisted ``Satellite``/``TLE``/``Conjunction``
+rows into the framework-agnostic :class:`OrbitalBin` and
+:class:`ConjunctionTimelinePoint` dataclasses consumed by the heatmap
+use cases.
 
 Design notes:
 
@@ -10,26 +11,35 @@ Design notes:
   active TLE. The cost is dominated by the C-side parse (sgp4 ships a
   vectorised C implementation); for 30 000 satellites this routinely
   completes in well under 200 ms on a developer laptop.
+* The conjunctions timeline aggregation is a single ``GROUP BY`` over
+  the truncated ``tca`` column. Counting per bucket happens in SQL,
+  which keeps the round-trip cheap regardless of the table size.
 """
 
 from __future__ import annotations
 
 import math
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
 from oc.domain.entities import (
     ConjunctionTimelinePoint,
     OrbitalBin,
 )
-from oc.infrastructure.persistence.models import TLE, Satellite
+from oc.infrastructure.persistence.models import TLE, Conjunction, Satellite
 
 # Earth equatorial radius (WGS-72) used by sgp4 to convert the satellite
 # record's ``a`` field (Earth radii) into kilometres.
 _EARTH_RADIUS_KM: float = 6378.135
+
+# Threshold below which a conjunction is reported under the ``miss_lt_*``
+# aggregations. Mirrors the constants used in the use case layer.
+_MISS_THRESHOLD_1KM: float = 1.0
+_MISS_THRESHOLD_5KM: float = 5.0
 
 
 class SQLAlchemyHeatmapRepository:
@@ -74,10 +84,58 @@ class SQLAlchemyHeatmapRepository:
     async def conjunctions_per_day(
         self, start: datetime, end: datetime
     ) -> Sequence[ConjunctionTimelinePoint]:
-        """Stub implementation; the timeline endpoint enables this in a follow-up commit."""
-        raise NotImplementedError(
-            "conjunctions_per_day is wired by the timeline endpoint commit"
+        """Aggregate ``conjunctions`` by UTC day in ``[start, end)``.
+
+        The implementation uses ``date(...)`` for SQLite and ``DATE(...)``
+        on PostgreSQL via SQLAlchemy's portable ``func.date``. Aggregation
+        is performed in SQL with a ``GROUP BY``.
+        """
+        bucket: ColumnElement[date] = func.date(Conjunction.tca).label("day")
+        miss_lt_1km = func.sum(
+            case((Conjunction.miss_distance_km < _MISS_THRESHOLD_1KM, 1), else_=0)
         )
+        miss_lt_5km = func.sum(
+            case((Conjunction.miss_distance_km < _MISS_THRESHOLD_5KM, 1), else_=0)
+        )
+        total = func.count()
+        stmt = (
+            select(
+                bucket,
+                miss_lt_1km.label("miss_lt_1km"),
+                miss_lt_5km.label("miss_lt_5km"),
+                total.label("total"),
+            )
+            .where(Conjunction.tca >= start, Conjunction.tca < end)
+            .group_by(bucket)
+        )
+        rows = (await self._session.execute(stmt)).all()
+        out: list[ConjunctionTimelinePoint] = []
+        for day, lt1, lt5, tot in rows:
+            out.append(
+                ConjunctionTimelinePoint(
+                    date=_coerce_date(day),
+                    miss_lt_1km=int(lt1 or 0),
+                    miss_lt_5km=int(lt5 or 0),
+                    total=int(tot or 0),
+                )
+            )
+        return out
+
+
+def _coerce_date(value: object) -> date:
+    """Coerce a SQL ``date()`` result to a ``datetime.date`` instance.
+
+    SQLite returns the bucket as a string, PostgreSQL returns a
+    ``datetime.date``. Normalising here keeps the rest of the stack
+    blissfully unaware of the dialect.
+    """
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, str):
+        return date.fromisoformat(value[:10])
+    raise TypeError(f"unsupported date bucket type: {type(value).__name__}")
 
 
 def _orbital_bin_from_tle(line1: str, line2: str) -> OrbitalBin | None:
