@@ -62,6 +62,16 @@ class Settings(BaseSettings):
     # Whether the FastAPI lifespan should boot the APScheduler worker.
     enable_scheduler: bool = False
 
+    # Alert subsystem.
+    alerts_base_url: str = "http://localhost:8000"
+    alerts_horizon_days: float = 7.0
+    alerts_notify_interval_minutes: float = 15.0
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_address: str = "alerts@orbital-conjunctions.local"
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

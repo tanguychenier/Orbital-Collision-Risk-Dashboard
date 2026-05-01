@@ -12,6 +12,8 @@ from datetime import UTC, date, datetime
 from typing import Any
 
 from sqlalchemy import (
+    JSON,
+    Boolean,
     DateTime,
     Float,
     ForeignKey,
@@ -112,3 +114,57 @@ class Conjunction(Base):
     sat_b: Mapped[Satellite] = relationship(foreign_keys=[sat_b_norad_id])
     tle_a: Mapped[TLE] = relationship(foreign_keys=[tle_a_id])
     tle_b: Mapped[TLE] = relationship(foreign_keys=[tle_b_id])
+
+
+class AlertSubscription(Base):
+    """A standing alert subscription for one or more satellites.
+
+    The subsystem is stateless: ``secret_token`` is the only credential
+    and is required to inspect or unsubscribe. ``norad_ids`` is stored
+    as a JSON array of integers so the row is portable across SQLite
+    and PostgreSQL without bespoke array types.
+    """
+
+    __tablename__ = "alert_subscriptions"
+    __table_args__ = (Index("ix_alert_subscriptions_is_active", "is_active"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    email_or_webhook_url: Mapped[str] = mapped_column(String(512), nullable=False)
+    norad_ids: Mapped[list[int]] = mapped_column(JSON, nullable=False)
+    miss_distance_km_threshold: Mapped[float] = mapped_column(Float, nullable=False)
+    secret_token: Mapped[str] = mapped_column(String(64), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False
+    )
+    last_notified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
+class AlertSubscriptionDelivery(Base):
+    """Tracks which conjunction ids have already been delivered for a subscription.
+
+    The pair ``(subscription_id, conjunction_id)`` is unique so the
+    notification loop is safely idempotent and can be rerun without
+    re-sending the same alert.
+    """
+
+    __tablename__ = "alert_subscription_deliveries"
+    __table_args__ = (
+        UniqueConstraint(
+            "subscription_id",
+            "conjunction_id",
+            name="uq_alert_deliveries_pair",
+        ),
+        Index("ix_alert_deliveries_subscription", "subscription_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    subscription_id: Mapped[str] = mapped_column(
+        ForeignKey("alert_subscriptions.id", ondelete="CASCADE"), nullable=False
+    )
+    conjunction_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    notified_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False
+    )

@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Protocol, runtime_checkable
 
 from oc.domain.entities import (
+    AlertSubscription,
     ConjunctionEvent,
     ConjunctionTimelinePoint,
     OrbitalBin,
@@ -72,6 +73,68 @@ class ConjunctionRepository(Protocol):
 
     async def replace_all(self, events: Sequence[ConjunctionEvent]) -> None:
         """Atomically replace the table contents with ``events``."""
+
+
+@runtime_checkable
+class AlertSubscriptionRepository(Protocol):
+    """Persistence boundary for the ``alert_subscriptions`` table."""
+
+    async def add(self, subscription: AlertSubscription) -> None:
+        """Persist a brand-new subscription."""
+
+    async def get(self, subscription_id: str) -> AlertSubscription | None:
+        """Fetch one subscription by its UUID, or ``None`` if not found."""
+
+    async def list_active(self) -> Sequence[AlertSubscription]:
+        """Return every subscription whose ``is_active`` flag is ``True``."""
+
+    async def deactivate(self, subscription_id: str) -> None:
+        """Soft-delete a subscription by setting ``is_active=False``."""
+
+    async def mark_notified(self, subscription_id: str, when: datetime) -> None:
+        """Set the ``last_notified_at`` timestamp for ``subscription_id``."""
+
+    async def has_been_notified(self, subscription_id: str, conjunction_id: str) -> bool:
+        """Return ``True`` if ``conjunction_id`` was already delivered to this subscription."""
+
+    async def record_notified(self, subscription_id: str, conjunction_id: str) -> None:
+        """Record that ``conjunction_id`` was delivered to this subscription."""
+
+
+@runtime_checkable
+class AlertNotifier(Protocol):
+    """Outbound port for delivering an alert payload (email or webhook)."""
+
+    async def notify(
+        self,
+        target: str,
+        subject: str,
+        message: str,
+        payload: dict[str, object],
+    ) -> bool:
+        """Deliver ``payload`` to ``target``. Return ``True`` if delivery succeeded."""
+
+
+@runtime_checkable
+class ConjunctionAlertSource(Protocol):
+    """Read-only port exposing conjunctions to the alert notification loop."""
+
+    async def upcoming_conjunctions_for_satellites(
+        self,
+        norad_ids: Sequence[int],
+        max_distance_km: float,
+        until: datetime,
+    ) -> Sequence[dict[str, object]]:
+        """Return upcoming conjunctions touching ``norad_ids`` below the threshold.
+
+        Each row is a plain dict with the keys:
+
+        ``id``, ``sat_a_norad_id``, ``sat_a_name``, ``sat_b_norad_id``,
+        ``sat_b_name``, ``tca``, ``miss_distance_km``,
+        ``relative_velocity_km_s`` and ``probability``. Returning a dict
+        keeps the application layer independent from the SQLAlchemy row
+        type while still being trivial to fake.
+        """
 
 
 @runtime_checkable
