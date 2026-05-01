@@ -1,0 +1,35 @@
+# Keep the build context lean: never ship caches, tests, e2e artifacts, or
+# local node_modules into the runtime image.
+
+# Local installs and build outputs are recreated inside the image.
+node_modules/
+dist/
+dist-ssr/
+.cache/
+.vite/
+
+# Tests and reports do not belong in the production bundle.
+tests/
+e2e/
+playwright-report/
+test-results/
+
+# Source-control metadata.
+.git/
+.gitignore
+.gitattributes
+
+# Editor / OS metadata.
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Local environment files.
+.env
+.env.*
+*.local
+
+# Documentation that has no place in the image.
+README.md

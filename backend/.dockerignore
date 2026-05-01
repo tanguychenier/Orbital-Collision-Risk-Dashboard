@@ -1,0 +1,46 @@
+# Keep the build context lean: never ship caches, tests, or local virtualenvs
+# into the runtime image.
+
+# Tests and fixtures are not needed at runtime.
+tests/
+
+# Python build / cache artefacts.
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments.
+.venv/
+venv/
+
+# Editor / OS metadata.
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Source-control metadata.
+.git/
+.gitignore
+.gitattributes
+
+# Documentation and configuration that has no place in the image.
+README.md
+*.md
+docker-compose*.yml
+
+# Local databases and env files.
+*.sqlite
+*.db
+.env
+.env.*
