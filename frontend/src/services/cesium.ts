@@ -72,17 +72,25 @@ export async function createGlobe(opts: InitOptions): Promise<CesiumViewerHandle
     fullscreenButton: false,
     infoBox: false,
     selectionIndicator: false,
-    // Use Cesium's bundled Natural Earth II tiles (TileMapService format).
-    // vite-plugin-cesium copies them under /cesium/Assets/Textures/... so
-    // they are served as static files, work offline, work in every modern
-    // browser (Chrome, Firefox, Safari, Edge), and avoid Cesium ION auth
-    // or third-party tile servers (CORS / rate-limit issues).
+    // Imagery: a single 2048×1024 Natural Earth II texture stitched from
+    // Cesium's bundled tile set (public domain, no attribution-by-third-
+    // party requirement, no auth, no rate limits, no CORS).
+    //
+    // We use SingleTileImageryProvider rather than the tile-pyramid
+    // providers because Cesium's TMS pyramid pipeline turned out to skip
+    // the imagery request silently in Firefox 130+ when served via Vite's
+    // dev middleware (no tile request fired, while Chromium fired the
+    // expected six). A single tile sidesteps the entire tiling-scheme
+    // initialisation path and renders identically on every modern engine.
     baseLayer: ionToken
       ? undefined
       : new Cesium.ImageryLayer(
-          await Cesium.TileMapServiceImageryProvider.fromUrl(
-            Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII'),
-            { credit: new Cesium.Credit('Natural Earth II - public domain', true) }
+          await Cesium.SingleTileImageryProvider.fromUrl(
+            '/earth-natural-earth-ii.jpg',
+            {
+              rectangle: Cesium.Rectangle.fromDegrees(-180, -90, 180, 90),
+              credit: new Cesium.Credit('Natural Earth II - public domain', true)
+            }
           )
         )
   });

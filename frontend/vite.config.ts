@@ -12,11 +12,19 @@ export default defineConfig({
     }
   },
   // Pre-bundle Cesium with esbuild so its internal cyclic imports are
-  // resolved BEFORE Rollup chunking kicks in. Without this, the production
-  // build has a Temporal-Dead-Zone error ("Cannot access 't' before
-  // initialization") inside the lazy Cesium chunk.
+  // resolved BEFORE Rollup chunking kicks in. Without this:
+  //   - the production build hits a Temporal-Dead-Zone ReferenceError
+  //     ("Cannot access 't' before initialization") inside the lazy chunk;
+  //   - the dev server fails to resolve the CommonJS interop for Cesium's
+  //     transitive deps (mersenne-twister, etc.).
+  // `keepNames: true` is mandatory to avoid identifier collisions inside
+  // the Cesium bundle. The same flag is mirrored in `esbuild.keepNames`
+  // for the production rollup pass.
   optimizeDeps: {
-    include: ['cesium']
+    include: ['cesium'],
+    esbuildOptions: {
+      keepNames: true
+    }
   },
   server: {
     port: 5173,

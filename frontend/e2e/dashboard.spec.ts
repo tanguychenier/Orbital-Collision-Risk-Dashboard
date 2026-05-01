@@ -44,8 +44,10 @@ test.describe('dashboard', () => {
 
     await unfoldGlobeOnMobile(page, viewportFromProject(testInfo.project.name));
 
-    // Give the layout a moment to settle without depending on Cesium's GPU.
-    await page.waitForTimeout(500);
+    // Wait long enough for Cesium's quadtree to upload its first level of
+    // imagery to the GPU. 500ms wasn't enough on Firefox preview; 4s is
+    // a comfortable margin while still letting the test run quickly.
+    await page.waitForTimeout(4_000);
 
     await page.screenshot({
       path: path.join(screenshotDir(testInfo), 'dashboard.png'),
