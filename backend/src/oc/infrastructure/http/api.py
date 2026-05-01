@@ -6,6 +6,7 @@ from fastapi import APIRouter
 
 from oc.infrastructure.http import (
     alerts,
+    calendar,
     conjunctions,
     health,
     heatmap,
@@ -23,4 +24,5 @@ def build_api_router() -> APIRouter:
     router.include_router(conjunctions.router, tags=["conjunctions"])
     router.include_router(heatmap.router, tags=["heatmap"])
     router.include_router(alerts.router, tags=["alerts"])
+    router.include_router(calendar.router, tags=["calendar"])
     return router

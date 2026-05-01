@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import csv
+import io
 import logging
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -78,6 +81,109 @@ async def list_conjunctions(
     )
     rows = (await session.execute(stmt)).scalars().all()
     return [_to_list_item(c) for c in rows]
+
+
+@router.get(
+    "/conjunctions.csv",
+    responses={200: {"content": {"text/csv": {}}}},
+)
+async def export_conjunctions_csv(
+    max_distance_km: float = Query(default=_DEFAULT_MAX_DISTANCE_KM, gt=0.0, le=1000.0),
+    hours: float = Query(default=_DEFAULT_HORIZON_HOURS, gt=0.0, le=_MAX_HORIZON_HOURS),
+    norad_id: list[int] | None = Query(default=None),
+    session: AsyncSession = Depends(get_db_session),
+    settings: Settings = Depends(get_settings),
+) -> StreamingResponse:
+    """Stream upcoming conjunctions as a UTF-8 CSV file.
+
+    Designed for ops teams: open in Excel / LibreOffice / pandas. The
+    column set mirrors the JSON list payload one-to-one (one row per
+    conjunction) and includes the WGS-84 sub-satellite points so an
+    operator can sanity-check the report against a separate STK or
+    GMAT pipeline.
+    """
+    now = datetime.now(UTC)
+    horizon = now + timedelta(hours=hours)
+    stmt = (
+        select(Conjunction)
+        .options(
+            selectinload(Conjunction.sat_a),
+            selectinload(Conjunction.sat_b),
+            selectinload(Conjunction.tle_a),
+            selectinload(Conjunction.tle_b),
+        )
+        .where(
+            Conjunction.tca >= now,
+            Conjunction.tca <= horizon,
+            Conjunction.miss_distance_km <= max_distance_km,
+        )
+        .order_by(Conjunction.tca)
+        .limit(min(10_000, settings.api_max_limit * 10))
+    )
+    if norad_id:
+        from sqlalchemy import or_
+
+        stmt = stmt.where(
+            or_(
+                Conjunction.sat_a_norad_id.in_(norad_id),
+                Conjunction.sat_b_norad_id.in_(norad_id),
+            )
+        )
+    rows = (await session.execute(stmt)).scalars().all()
+
+    buf = io.StringIO()
+    writer = csv.writer(buf, lineterminator="\n")
+    writer.writerow(
+        [
+            "id",
+            "tca_utc",
+            "miss_distance_km",
+            "relative_velocity_km_s",
+            "probability",
+            "sat_a_norad_id",
+            "sat_a_name",
+            "sat_a_lat_deg",
+            "sat_a_lon_deg",
+            "sat_a_alt_km",
+            "sat_b_norad_id",
+            "sat_b_name",
+            "sat_b_lat_deg",
+            "sat_b_lon_deg",
+            "sat_b_alt_km",
+        ]
+    )
+    for c in rows:
+        tca = _ensure_utc(c.tca)
+        pa = _propagate_to_geodetic(c.tle_a, tca)
+        pb = _propagate_to_geodetic(c.tle_b, tca)
+        writer.writerow(
+            [
+                c.id,
+                tca.isoformat(),
+                f"{c.miss_distance_km:.4f}",
+                f"{c.relative_velocity_km_s:.4f}",
+                f"{c.probability:.6e}",
+                c.sat_a.norad_id,
+                c.sat_a.name,
+                f"{pa.latitude_deg:.6f}" if pa else "",
+                f"{pa.longitude_deg:.6f}" if pa else "",
+                f"{pa.altitude_km:.3f}" if pa else "",
+                c.sat_b.norad_id,
+                c.sat_b.name,
+                f"{pb.latitude_deg:.6f}" if pb else "",
+                f"{pb.longitude_deg:.6f}" if pb else "",
+                f"{pb.altitude_km:.3f}" if pb else "",
+            ]
+        )
+    buf.seek(0)
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": 'attachment; filename="conjunctions.csv"',
+            "Cache-Control": "public, max-age=300",
+        },
+    )
 
 
 @router.get(

@@ -58,6 +58,14 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
     api_default_limit: int = 200
     api_max_limit: int = 1000
+    public_base_url: str = Field(
+        default="https://orbital-conjunctions.example.com",
+        description=(
+            "Origin used to construct deep-links emitted by the API "
+            "(iCalendar URL property, manage URLs, ...). Override per "
+            "deployment."
+        ),
+    )
 
     # Whether the FastAPI lifespan should boot the APScheduler worker.
     enable_scheduler: bool = False

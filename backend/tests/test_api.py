@@ -203,6 +203,79 @@ async def test_conjunction_detail_404(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_calendar_feed_is_valid_ical(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """``/api/calendar.ics`` returns a single VEVENT for the seeded conjunction."""
+    seeded = await _seed_database(db_session)
+    response = await client.get("/api/calendar.ics")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/calendar")
+    body = response.text
+    assert body.startswith("BEGIN:VCALENDAR\r\n")
+    assert body.rstrip("\r\n").endswith("END:VCALENDAR")
+    assert "VERSION:2.0" in body
+    assert "BEGIN:VEVENT" in body
+    assert "END:VEVENT" in body
+    assert f"UID:{seeded['conj_id']}@orbital-conjunctions" in body
+    # Lines must end with CRLF per RFC 5545. A bare LF would fail parsers.
+    assert "\n\r\n" not in body  # no trailing-LF before CRLF artefacts
+    assert "\r\n" in body
+    # The summary must mention both satellite names.
+    assert "ALPHA-1" in body and "BETA-2" in body
+
+
+@pytest.mark.asyncio
+async def test_calendar_feed_filters_by_norad_id(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """A NORAD-id filter that excludes both satellites must yield an empty feed."""
+    await _seed_database(db_session)
+    response = await client.get("/api/calendar.ics", params={"norad_id": 99999})
+    assert response.status_code == 200
+    body = response.text
+    assert "BEGIN:VEVENT" not in body
+    assert body.startswith("BEGIN:VCALENDAR")
+    assert body.rstrip("\r\n").endswith("END:VCALENDAR")
+
+
+@pytest.mark.asyncio
+async def test_conjunctions_csv_export(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """``/api/conjunctions.csv`` streams a parseable CSV with a header row."""
+    seeded = await _seed_database(db_session)
+    response = await client.get("/api/conjunctions.csv")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert "attachment" in response.headers.get("content-disposition", "")
+    body = response.text
+    lines = body.splitlines()
+    header = lines[0].split(",")
+    assert "id" in header
+    assert "tca_utc" in header
+    assert "miss_distance_km" in header
+    assert "sat_a_lat_deg" in header
+    assert "sat_b_alt_km" in header
+    # One header + one data row for the seeded conjunction.
+    assert len(lines) == 2
+    data = lines[1].split(",")
+    assert data[0] == seeded["conj_id"]
+
+
+@pytest.mark.asyncio
+async def test_conjunctions_csv_filters_by_norad_id(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """Filtering by an unknown NORAD id must return only the header row."""
+    await _seed_database(db_session)
+    response = await client.get("/api/conjunctions.csv", params={"norad_id": 99999})
+    assert response.status_code == 200
+    body = response.text
+    assert len(body.splitlines()) == 1  # header only
+
+
+@pytest.mark.asyncio
 async def test_pagination_cap_respects_max_limit(
     client: AsyncClient, db_session: AsyncSession
 ) -> None:
