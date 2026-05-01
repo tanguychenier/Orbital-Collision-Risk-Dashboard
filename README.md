@@ -83,6 +83,14 @@ The frontend ships with [Mock Service Worker](https://mswjs.io/) fixtures, so yo
 | Lint | `cd backend && uv run ruff check && cd ../frontend && pnpm lint` | Linters and formatters everywhere |
 | Type-check | `uv run mypy src` (backend) / `pnpm typecheck` (frontend) | Strict typing both sides |
 
+Detailed guides live under [`docs/`](docs/):
+
+- [`docs/architecture.md`](docs/architecture.md) - hexagonal layout, port/adapter mapping, request flow.
+- [`docs/contributing.md`](docs/contributing.md) - dev setup, code style, Conventional Commits, PR checklist.
+- [`docs/data-sources.md`](docs/data-sources.md) - CelesTrak rate limits, Space-Track alternative, TLE accuracy caveats.
+- [`SECURITY.md`](SECURITY.md) - responsible-disclosure policy.
+- [`CHANGELOG.md`](CHANGELOG.md) - release history (Keep a Changelog).
+
 ## Project layout
 
 ```
