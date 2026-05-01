@@ -1,0 +1,78 @@
+# Pre-commit hooks for the Orbital Conjunctions repository.
+#
+# Install once with:
+#     pip install pre-commit && pre-commit install
+#
+# Then every `git commit` will run ruff + mypy on the backend, eslint +
+# prettier on the frontend, and markdownlint on every Markdown file.
+
+repos:
+  # Generic hygiene -----------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  # Backend: ruff (lint + format) + mypy (strict) -----------------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^backend/
+      - id: ruff-format
+        files: ^backend/
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        name: mypy (backend strict)
+        files: ^backend/src/
+        args: [--config-file=backend/pyproject.toml]
+        additional_dependencies:
+          - types-python-dateutil
+          - pydantic>=2.7
+          - pydantic-settings>=2.3
+          - sqlalchemy>=2.0
+          - fastapi>=0.115
+          - structlog>=24.1
+          - httpx>=0.27
+          - numpy>=1.26
+          - sgp4>=2.23
+          - apscheduler>=3.10
+          - scipy>=1.13
+
+  # Frontend: eslint + prettier ----------------------------------------
+  - repo: local
+    hooks:
+      - id: frontend-eslint
+        name: frontend eslint --fix
+        language: system
+        files: ^frontend/.+\.(ts|vue|js|cjs|mjs)$
+        entry: bash -c 'cd frontend && pnpm lint:fix'
+        pass_filenames: false
+
+      - id: frontend-prettier
+        name: frontend prettier --write
+        language: system
+        files: ^frontend/.+\.(ts|vue|js|cjs|mjs|json|css|md)$
+        entry: bash -c 'cd frontend && pnpm prettier --write "src/**/*.{ts,vue,css,json}"'
+        pass_filenames: false
+
+  # Markdown ------------------------------------------------------------
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.41.0
+    hooks:
+      - id: markdownlint
+        args: [--config, .markdownlint.json]
