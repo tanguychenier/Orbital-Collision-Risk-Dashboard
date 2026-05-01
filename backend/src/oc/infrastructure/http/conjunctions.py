@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -11,13 +12,22 @@ from sqlalchemy.orm import selectinload
 
 from oc.config import Settings, get_settings
 from oc.db import get_db_session
-from oc.infrastructure.persistence.models import Conjunction
+from oc.infrastructure.persistence.models import Conjunction, TLE
+from oc.infrastructure.propagation.geodetic import ecef_to_geodetic, teme_to_ecef
+from oc.infrastructure.propagation.sgp4_propagator import (
+    PropagationError,
+    propagate_single,
+    satrec_from_tle,
+)
 from oc.interface.schemas import (
     ConjunctionDetail,
     ConjunctionListItem,
+    GeodeticTCAPosition,
     SatelliteDetail,
     SatelliteSummary,
 )
+
+_log = logging.getLogger(__name__)
 
 # Default upper bound on the screening horizon exposed via the ``hours``
 # query parameter. Accepting up to a month protects callers from foot
@@ -51,7 +61,12 @@ async def list_conjunctions(
     capped_limit = min(limit, settings.api_max_limit)
     stmt = (
         select(Conjunction)
-        .options(selectinload(Conjunction.sat_a), selectinload(Conjunction.sat_b))
+        .options(
+            selectinload(Conjunction.sat_a),
+            selectinload(Conjunction.sat_b),
+            selectinload(Conjunction.tle_a),
+            selectinload(Conjunction.tle_b),
+        )
         .where(
             Conjunction.tca >= now,
             Conjunction.tca <= horizon,
@@ -91,17 +106,42 @@ async def get_conjunction(
     return _to_detail(row)
 
 
+def _propagate_to_geodetic(tle: TLE, tca: datetime) -> GeodeticTCAPosition | None:
+    """Propagate a TLE to ``tca`` and return the WGS-84 sub-satellite point.
+
+    Returns ``None`` instead of raising so that one corrupt TLE never
+    breaks the whole list. The endpoint logs the failure and the
+    front-end falls back to an unobtrusive null marker.
+    """
+    try:
+        satrec = satrec_from_tle(tle.line1, tle.line2)
+        position_teme_km, _velocity = propagate_single(satrec, _ensure_utc(tca))
+    except (PropagationError, ValueError, RuntimeError) as exc:
+        _log.warning(
+            "skipping TCA position for tle %d: %s", tle.id, exc, exc_info=False
+        )
+        return None
+    ecef = teme_to_ecef(position_teme_km, _ensure_utc(tca))
+    lat, lon, alt = ecef_to_geodetic(ecef)
+    return GeodeticTCAPosition(
+        latitude_deg=lat, longitude_deg=lon, altitude_km=alt
+    )
+
+
 def _to_list_item(c: Conjunction) -> ConjunctionListItem:
     """Map a SQLAlchemy ``Conjunction`` row to its list-item DTO."""
+    tca = _ensure_utc(c.tca)
     return ConjunctionListItem(
         id=c.id,
         sat_a=SatelliteSummary(norad_id=c.sat_a.norad_id, name=c.sat_a.name),
         sat_b=SatelliteSummary(norad_id=c.sat_b.norad_id, name=c.sat_b.name),
-        tca=_ensure_utc(c.tca),
+        tca=tca,
         miss_distance_km=c.miss_distance_km,
         relative_velocity_km_s=c.relative_velocity_km_s,
         probability=c.probability,
         computed_at=_ensure_utc(c.computed_at),
+        tca_position_a=_propagate_to_geodetic(c.tle_a, tca),
+        tca_position_b=_propagate_to_geodetic(c.tle_b, tca),
     )
 
 

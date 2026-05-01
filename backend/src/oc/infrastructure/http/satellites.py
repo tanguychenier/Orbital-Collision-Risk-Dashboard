@@ -11,6 +11,7 @@ from sqlalchemy.orm import selectinload
 
 from oc.config import Settings, get_settings
 from oc.db import get_db_session
+from oc.infrastructure.http.conjunctions import _to_list_item
 from oc.infrastructure.persistence.models import Conjunction, Satellite
 from oc.infrastructure.persistence.satellite_repository import SQLAlchemySatelliteRepository
 from oc.interface.schemas import (
@@ -18,7 +19,6 @@ from oc.interface.schemas import (
     SatelliteConjunctionStats,
     SatelliteDetail,
     SatelliteDetailResponse,
-    SatelliteSummary,
 )
 
 # Default upper bound on the screening horizon exposed by the endpoint
@@ -131,7 +131,12 @@ async def list_satellite_conjunctions(
     capped_limit = min(limit, settings.api_max_limit)
     stmt = (
         select(Conjunction)
-        .options(selectinload(Conjunction.sat_a), selectinload(Conjunction.sat_b))
+        .options(
+            selectinload(Conjunction.sat_a),
+            selectinload(Conjunction.sat_b),
+            selectinload(Conjunction.tle_a),
+            selectinload(Conjunction.tle_b),
+        )
         .where(
             or_(
                 Conjunction.sat_a_norad_id == norad_id,
@@ -156,20 +161,6 @@ def _apply_name_filter(
         return stmt
     like = f"%{query.lower()}%"
     return stmt.where(func.lower(Satellite.name).like(like))
-
-
-def _to_list_item(c: Conjunction) -> ConjunctionListItem:
-    """Map a SQLAlchemy ``Conjunction`` row to its list-item DTO."""
-    return ConjunctionListItem(
-        id=c.id,
-        sat_a=SatelliteSummary(norad_id=c.sat_a.norad_id, name=c.sat_a.name),
-        sat_b=SatelliteSummary(norad_id=c.sat_b.norad_id, name=c.sat_b.name),
-        tca=_ensure_utc(c.tca),
-        miss_distance_km=c.miss_distance_km,
-        relative_velocity_km_s=c.relative_velocity_km_s,
-        probability=c.probability,
-        computed_at=_ensure_utc(c.computed_at),
-    )
 
 
 async def _conjunction_counts(

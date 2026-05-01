@@ -72,6 +72,19 @@ class SatelliteDetailResponse(BaseModel):
     stats: SatelliteConjunctionStats
 
 
+class GeodeticTCAPosition(BaseModel):
+    """Sub-satellite point and altitude of one object at the conjunction's TCA.
+
+    The point is in WGS-84 geodetic coordinates: ``latitude`` is the
+    geodetic latitude in ``[-90, 90]``, ``longitude`` is in ``[-180, 180]``,
+    and ``altitude_km`` is height above the WGS-84 ellipsoid (km).
+    """
+
+    latitude_deg: float = Field(ge=-90.0, le=90.0)
+    longitude_deg: float = Field(ge=-180.0, le=180.0)
+    altitude_km: float
+
+
 class ConjunctionListItem(BaseModel):
     """One row in the ``GET /api/conjunctions`` list."""
 
@@ -83,6 +96,17 @@ class ConjunctionListItem(BaseModel):
     relative_velocity_km_s: float
     probability: float
     computed_at: datetime
+    tca_position_a: GeodeticTCAPosition | None = Field(
+        default=None,
+        description=(
+            "Sub-satellite point and altitude of satellite A at TCA. "
+            "Null if propagation failed (corrupt TLE)."
+        ),
+    )
+    tca_position_b: GeodeticTCAPosition | None = Field(
+        default=None,
+        description="Sub-satellite point and altitude of satellite B at TCA.",
+    )
 
 
 class ConjunctionDetail(BaseModel):

@@ -147,6 +147,24 @@ async def test_conjunctions_list(client: AsyncClient, db_session: AsyncSession) 
 
 
 @pytest.mark.asyncio
+async def test_conjunctions_list_includes_tca_positions(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """Each row carries the sub-satellite point of A and B at TCA."""
+    await _seed_database(db_session)
+    response = await client.get("/api/conjunctions")
+    assert response.status_code == 200
+    item = response.json()[0]
+    for key in ("tca_position_a", "tca_position_b"):
+        position = item[key]
+        assert position is not None, f"{key} should not be null for valid TLEs"
+        assert -90.0 <= position["latitude_deg"] <= 90.0
+        assert -180.0 <= position["longitude_deg"] <= 180.0
+        # The seeded TLEs are LEO; altitude is comfortably under GEO.
+        assert -50.0 < position["altitude_km"] < 36_000.0
+
+
+@pytest.mark.asyncio
 async def test_conjunctions_filter_max_distance(
     client: AsyncClient, db_session: AsyncSession
 ) -> None:
