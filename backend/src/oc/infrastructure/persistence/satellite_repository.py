@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import ColumnElement, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from oc.domain.entities import SatelliteRecord, TLERecord
@@ -72,7 +72,7 @@ class SQLAlchemySatelliteRepository:
             stmt = select(Satellite).order_by(Satellite.norad_id).limit(limit)
         else:
             like = f"%{normalised.lower()}%"
-            conditions = [func.lower(Satellite.name).like(like)]
+            conditions: list[ColumnElement[bool]] = [func.lower(Satellite.name).like(like)]
             if normalised.isdigit():
                 conditions.append(Satellite.norad_id == int(normalised))
             stmt = (

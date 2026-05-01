@@ -54,6 +54,24 @@ class SatelliteDetail(BaseModel):
     launch_date: date | None = None
 
 
+class SatelliteConjunctionStats(BaseModel):
+    """Counts of upcoming conjunctions over rolling windows for one satellite."""
+
+    next_24h: int
+    next_72h: int
+    next_7d: int
+
+
+class SatelliteDetailResponse(BaseModel):
+    """Payload for ``GET /api/satellites/{id}``."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    satellite: SatelliteDetail
+    last_tle_epoch: datetime | None = None
+    stats: SatelliteConjunctionStats
+
+
 class ConjunctionListItem(BaseModel):
     """One row in the ``GET /api/conjunctions`` list."""
 
