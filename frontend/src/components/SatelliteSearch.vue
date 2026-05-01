@@ -61,10 +61,12 @@ function handleSelect(event: AutoCompleteOptionSelectEvent): void {
       class="w-full"
       input-class="w-full"
       :pt="{
-        input: {
-          class: 'w-full',
-          'aria-label': placeholder,
-          'data-testid': 'satellite-search-input'
+        pcInputText: {
+          root: {
+            class: 'w-full',
+            'aria-label': placeholder,
+            'data-testid': 'satellite-search-input'
+          }
         }
       }"
       @complete="handleComplete"

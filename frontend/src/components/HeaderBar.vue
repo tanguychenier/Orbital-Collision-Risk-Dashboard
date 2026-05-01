@@ -1,12 +1,39 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from 'primevue/button';
+import Dialog from 'primevue/dialog';
 import { RouterLink } from 'vue-router';
 import { useTheme } from '@/composables/useTheme';
 import SatelliteSearch from '@/components/SatelliteSearch.vue';
 
 const { t } = useI18n();
 const { isDark, toggle } = useTheme();
+
+const aboutOpen = ref(false);
+
+const aboutLinks: ReadonlyArray<{ label: string; href: string; icon: string }> = [
+  {
+    label: 'LinkedIn - Tanguy Chénier',
+    href: 'https://www.linkedin.com/in/tanguy-chenier/',
+    icon: 'pi pi-linkedin'
+  },
+  {
+    label: 'GitHub @Tan-Software',
+    href: 'https://github.com/Tan-Software',
+    icon: 'pi pi-github'
+  },
+  {
+    label: 'GitHub @tanguychenier',
+    href: 'https://github.com/tanguychenier',
+    icon: 'pi pi-github'
+  },
+  {
+    label: 'tansoftware.com',
+    href: 'https://www.tansoftware.com',
+    icon: 'pi pi-external-link'
+  }
+];
 </script>
 
 <template>
@@ -85,15 +112,16 @@ const { isDark, toggle } = useTheme();
             :label="t('nav.github')"
           />
         </a>
-        <a href="#about" class="hidden md:inline-flex">
-          <Button
-            severity="secondary"
-            text
-            size="small"
-            :label="t('nav.about')"
-            :aria-label="t('nav.about')"
-          />
-        </a>
+        <Button
+          severity="secondary"
+          text
+          size="small"
+          class="hidden md:inline-flex"
+          :label="t('nav.about')"
+          :aria-label="t('nav.about')"
+          data-testid="about-button"
+          @click="aboutOpen = true"
+        />
         <Button
           :icon="isDark ? 'pi pi-sun' : 'pi pi-moon'"
           severity="secondary"
@@ -105,5 +133,39 @@ const { isDark, toggle } = useTheme();
         />
       </nav>
     </div>
+    <Dialog
+      v-model:visible="aboutOpen"
+      modal
+      dismissable-mask
+      close-on-escape
+      :header="t('nav.about')"
+      :pt="{ root: { 'data-testid': 'about-dialog' } }"
+      :style="{ width: '32rem', maxWidth: '90vw' }"
+    >
+      <p class="text-sm leading-relaxed">
+        <span class="font-semibold">Orbital Conjunctions</span> is an
+        open-source dashboard tracking close-approach events between
+        satellites in real time. Built by
+        <a
+          href="https://www.tansoftware.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline decoration-dotted hover:text-cyan-300"
+        >Tansoftware</a> &mdash; Tanguy Chénier. Released under the MIT licence.
+      </p>
+      <ul class="mt-4 grid gap-2">
+        <li v-for="link in aboutLinks" :key="link.href">
+          <a
+            :href="link.href"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 text-sm hover:text-cyan-300 transition focus-ring"
+          >
+            <i :class="link.icon" aria-hidden="true" />
+            <span>{{ link.label }}</span>
+          </a>
+        </li>
+      </ul>
+    </Dialog>
   </header>
 </template>
