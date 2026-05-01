@@ -1,0 +1,38 @@
+import { test, expect } from '@playwright/test';
+
+/**
+ * Search-and-view flow:
+ *   1. Land on the dashboard.
+ *   2. Type into the header search input.
+ *   3. Pick a suggested satellite.
+ *   4. Land on /satellite/:noradId and assert the metadata renders.
+ *
+ * Mobile viewports hide the header search behind a breakpoint, so we
+ * fall back to navigating directly to the perma-link to still cover the
+ * critical "perma-link works" half of the contract.
+ */
+test.describe('satellite search', () => {
+  test('navigates from search to satellite detail', async ({ page }, testInfo) => {
+    const isMobile = testInfo.project.name.endsWith('mobile');
+    await page.goto('/');
+    await page.waitForSelector('[data-testid="header-bar"]');
+
+    if (isMobile) {
+      // Header search is hidden under `md:` -- jump straight to the perma-link.
+      await page.goto('/satellite/44713');
+    } else {
+      const searchInput = page.getByTestId('satellite-search-input');
+      await expect(searchInput).toBeVisible({ timeout: 10_000 });
+      await searchInput.fill('STARLINK');
+      const option = page.getByTestId('satellite-search-option-44713');
+      await expect(option).toBeVisible({ timeout: 10_000 });
+      await option.click();
+    }
+
+    await page.waitForURL('**/satellite/44713', { timeout: 10_000 });
+    await expect(page.getByTestId('satellite-detail-view')).toBeVisible();
+    await expect(page.getByTestId('satellite-name')).toContainText('STARLINK');
+    await expect(page.getByTestId('satellite-norad')).toContainText('44713');
+    await expect(page.getByTestId('copy-permalink')).toBeVisible();
+  });
+});
