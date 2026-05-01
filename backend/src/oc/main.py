@@ -1,4 +1,10 @@
-"""FastAPI application factory."""
+"""FastAPI application factory (composition root).
+
+This is the only place where the inbound HTTP adapter is connected to
+the outbound adapters (database, scheduler). The function
+:func:`create_app` instantiates the FastAPI app, wires routers, and -- if
+the scheduler is enabled -- boots the APScheduler instance.
+"""
 
 from __future__ import annotations
 
@@ -12,9 +18,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from oc import __version__
-from oc.api import conjunctions, health, satellites, stats
 from oc.config import Settings, get_settings
 from oc.db import init_models
+from oc.infrastructure.http.api import build_api_router
 
 
 def configure_logging() -> None:
@@ -38,6 +44,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     Args:
         settings: Optional settings override (used by tests).
+
+    Returns:
+        A fully wired :class:`fastapi.FastAPI` instance ready to serve.
     """
     configure_logging()
     s = settings or get_settings()
@@ -47,7 +56,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         await init_models()
         scheduler: Any | None = None
         if s.enable_scheduler:
-            from oc.workers.scheduler import build_scheduler
+            from oc.infrastructure.scheduler import build_scheduler
 
             scheduler = build_scheduler(s)
             scheduler.start()
@@ -62,7 +71,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         version=__version__,
         lifespan=lifespan,
     )
-
     app.add_middleware(
         CORSMiddleware,
         allow_origins=s.cors_origins,
@@ -70,12 +78,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
-    app.include_router(health.router, prefix="/api", tags=["health"])
-    app.include_router(stats.router, prefix="/api", tags=["stats"])
-    app.include_router(satellites.router, prefix="/api", tags=["satellites"])
-    app.include_router(conjunctions.router, prefix="/api", tags=["conjunctions"])
-
+    app.include_router(build_api_router())
     return app
 
 

@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, async_engine_from_config
 
 from oc.config import get_settings
 from oc.db import Base
-from oc.models import Conjunction, Satellite, TLE  # noqa: F401  (register tables)
+from oc.models import TLE, Conjunction, Satellite  # noqa: F401  (register tables)
 
 config = context.config
 if config.config_file_name is not None:

@@ -1,1 +1,1 @@
-"""Background workers (TLE refresh, conjunction recompute)."""
+"""Backwards-compatibility shim. The scheduler now lives in :mod:`oc.infrastructure.scheduler`."""
