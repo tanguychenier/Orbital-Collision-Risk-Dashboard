@@ -153,6 +153,34 @@ const aboutLinks: ReadonlyArray<{ label: string; href: string; icon: string }> =
           class="underline decoration-dotted hover:text-cyan-300"
         >Tansoftware</a> &mdash; Tanguy Chénier. Released under the MIT licence.
       </p>
+      <p class="text-sm leading-relaxed mt-3">
+        Programmatic access:
+        <a
+          href="/docs"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline decoration-dotted hover:text-cyan-300"
+          data-testid="api-docs-link"
+        >Swagger UI</a> &middot;
+        <a
+          href="/redoc"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline decoration-dotted hover:text-cyan-300"
+        >ReDoc</a> &middot;
+        <a
+          href="/api/calendar.ics"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline decoration-dotted hover:text-cyan-300"
+        >iCalendar feed</a> &middot;
+        <a
+          href="/api/conjunctions.csv"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline decoration-dotted hover:text-cyan-300"
+        >CSV export</a>.
+      </p>
       <ul class="mt-4 grid gap-2">
         <li v-for="link in aboutLinks" :key="link.href">
           <a

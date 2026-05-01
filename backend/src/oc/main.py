@@ -70,6 +70,34 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title="Orbital Conjunctions Dashboard API",
         version=__version__,
         lifespan=lifespan,
+        summary="Real-time public catalogue of satellite close-approach events.",
+        description=(
+            "Open data, no API key required. Each endpoint follows the "
+            "same query model: filter by NORAD id, miss-distance threshold, "
+            "and forecast horizon, then receive JSON, CSV, or iCalendar.\n\n"
+            "Operator-grade endpoints:\n"
+            "* `GET /api/conjunctions` — JSON list, includes the WGS-84 "
+            "sub-satellite point of both objects at TCA.\n"
+            "* `GET /api/conjunctions.csv` — same data as a "
+            "spreadsheet-friendly download.\n"
+            "* `GET /api/calendar.ics` — RFC 5545 calendar feed; subscribe "
+            "from Google / Outlook / Apple Calendar to see close approaches "
+            "appear next to your meetings.\n"
+            "* `POST /api/alerts/subscriptions` — register a webhook or "
+            "email to be notified when one of your satellites has a close "
+            "approach.\n\n"
+            "Source code, issue tracker and contribution guide: "
+            "[Tan-Software/Orbital-Collision-Risk-Dashboard]"
+            "(https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard)."
+        ),
+        contact={
+            "name": "Tan-Software",
+            "url": "https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard",
+        },
+        license_info={
+            "name": "MIT",
+            "url": "https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard/blob/main/LICENSE",
+        },
     )
     app.add_middleware(
         CORSMiddleware,
