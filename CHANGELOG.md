@@ -31,6 +31,11 @@ and this project adheres to
 - The SGP4 propagator and the SQLAlchemy persistence layer were
   isolated behind ports; the screening pipeline now takes a
   `Propagator` and a `BoundedScalarMinimizer` as injected dependencies.
+- Frontend magic numbers (risk thresholds, marker sizes, time bands)
+  promoted to named module-level constants.
+- `pnpm lint` runs with `--max-warnings 0` so warnings now fail CI.
+- API endpoints split their request mapping into small private helper
+  functions so each handler stays under 50 lines.
 
 ## [0.1.0] - 2026-05-01
 
