@@ -1,7 +1,9 @@
 import type {
   ConjunctionDetail,
   ConjunctionListItem,
+  ConjunctionTimelinePoint,
   HealthResponse,
+  HeatmapAltitudeInclinationResponse,
   Satellite,
   StatsResponse
 } from '@/api/types';
@@ -112,3 +114,65 @@ export const mockConjunctionDetails: Record<string, ConjunctionDetail> = Object.
     return [c.id, detail];
   })
 );
+
+const HEATMAP_ALTITUDE_BANDS_KM = [
+  200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900,
+  950, 1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500, 1550,
+  1600, 1650, 1700, 1750, 1800, 1850, 1900, 1950
+];
+
+const HEATMAP_INCLINATION_BANDS_DEG = [
+  0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95,
+  100, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150, 155, 160, 165, 170, 175
+];
+
+function makeMockHeatmap(): HeatmapAltitudeInclinationResponse {
+  const counts: number[][] = HEATMAP_ALTITUDE_BANDS_KM.map(() =>
+    HEATMAP_INCLINATION_BANDS_DEG.map(() => 0)
+  );
+  // Two demo congestion blobs roughly matching real LEO populations:
+  // Starlink shells around 540-560 km / 53 degrees and SSO around
+  // 800-850 km / 98 degrees.
+  const altIdx550 = HEATMAP_ALTITUDE_BANDS_KM.indexOf(550);
+  const incIdx50 = HEATMAP_INCLINATION_BANDS_DEG.indexOf(50);
+  counts[altIdx550][incIdx50] = 980;
+  const altIdx800 = HEATMAP_ALTITUDE_BANDS_KM.indexOf(800);
+  const incIdx95 = HEATMAP_INCLINATION_BANDS_DEG.indexOf(95);
+  counts[altIdx800][incIdx95] = 410;
+  // Sprinkle a few smaller bands so the heatmap is not visually empty.
+  counts[HEATMAP_ALTITUDE_BANDS_KM.indexOf(400)][HEATMAP_INCLINATION_BANDS_DEG.indexOf(50)] = 75;
+  counts[HEATMAP_ALTITUDE_BANDS_KM.indexOf(700)][HEATMAP_INCLINATION_BANDS_DEG.indexOf(95)] = 130;
+  return {
+    altitude_bands: HEATMAP_ALTITUDE_BANDS_KM,
+    inclination_bands: HEATMAP_INCLINATION_BANDS_DEG,
+    altitude_step_km: 50,
+    inclination_step_deg: 5,
+    counts,
+    total_satellites: counts.reduce(
+      (acc, row) => acc + row.reduce((rowAcc, value) => rowAcc + value, 0),
+      0
+    )
+  };
+}
+
+export const mockHeatmap: HeatmapAltitudeInclinationResponse = makeMockHeatmap();
+
+const TIMELINE_DAY_MS = 24 * 60 * 60 * 1000;
+
+export function mockTimeline(days: number): ConjunctionTimelinePoint[] {
+  const points: ConjunctionTimelinePoint[] = [];
+  const today = new Date();
+  for (let i = days - 1; i >= 0; i -= 1) {
+    const day = new Date(today.getTime() - i * TIMELINE_DAY_MS);
+    const total = 120 + Math.round(Math.sin(i / 3) * 30 + (i % 5) * 4);
+    const lt5 = Math.round(total * 0.08 + (i % 7));
+    const lt1 = Math.round(lt5 * 0.15);
+    points.push({
+      date: day.toISOString().slice(0, 10),
+      total,
+      miss_lt_5km: lt5,
+      miss_lt_1km: lt1
+    });
+  }
+  return points;
+}

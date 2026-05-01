@@ -51,7 +51,11 @@ const COLOR_NORMAL = '#22d3ee';
 const COLOR_LABEL_BG = 'rgba(15,23,42,0.7)';
 
 export async function createGlobe(opts: InitOptions): Promise<CesiumViewerHandle> {
-  // Use a public default ion token only if user provided one
+  // Use a public Cesium ION token only if the user supplied one. Without a
+  // token, the default ION imagery provider fails silently and the globe
+  // ends up as a featureless blue ellipsoid. We fall back to OpenStreetMap
+  // tiles (no token required, free and reliable) so the Earth always
+  // renders for end users out of the box.
   const ionToken = (import.meta.env.VITE_CESIUM_ION_TOKEN as string | undefined) ?? '';
   if (ionToken) {
     Cesium.Ion.defaultAccessToken = ionToken;
@@ -67,7 +71,20 @@ export async function createGlobe(opts: InitOptions): Promise<CesiumViewerHandle
     navigationHelpButton: false,
     fullscreenButton: false,
     infoBox: false,
-    selectionIndicator: false
+    selectionIndicator: false,
+    // Use Cesium's bundled Natural Earth II tiles (TileMapService format).
+    // vite-plugin-cesium copies them under /cesium/Assets/Textures/... so
+    // they are served as static files, work offline, work in every modern
+    // browser (Chrome, Firefox, Safari, Edge), and avoid Cesium ION auth
+    // or third-party tile servers (CORS / rate-limit issues).
+    baseLayer: ionToken
+      ? undefined
+      : new Cesium.ImageryLayer(
+          await Cesium.TileMapServiceImageryProvider.fromUrl(
+            Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII'),
+            { credit: new Cesium.Credit('Natural Earth II - public domain', true) }
+          )
+        )
   });
   viewer.scene.globe.enableLighting = true;
   viewer.scene.backgroundColor = Cesium.Color.fromCssColorString(COLOR_BACKGROUND);
