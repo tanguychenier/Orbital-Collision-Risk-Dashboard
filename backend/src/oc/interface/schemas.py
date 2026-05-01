@@ -100,3 +100,85 @@ class ConjunctionDetail(BaseModel):
     tle_a_line2: str
     tle_b_line1: str
     tle_b_line2: str
+
+
+class HeatmapAltitudeInclinationResponse(BaseModel):
+    """Payload for ``GET /api/heatmap/altitude-inclination``.
+
+    The matrix is row-major: ``counts[i][j]`` is the number of satellites
+    whose orbit falls in altitude bin ``altitude_bands[i]`` and
+    inclination bin ``inclination_bands[j]``. Both ``altitude_bands`` and
+    ``inclination_bands`` carry the *lower edge* of each bin so the
+    front-end can label its axes deterministically.
+    """
+
+    altitude_bands: list[float] = Field(
+        description="Lower edge (km) of each altitude bin, ascending.",
+    )
+    inclination_bands: list[float] = Field(
+        description="Lower edge (deg) of each inclination bin, ascending.",
+    )
+    altitude_step_km: float = Field(
+        description="Width (km) of every altitude bin (constant).",
+    )
+    inclination_step_deg: float = Field(
+        description="Width (deg) of every inclination bin (constant).",
+    )
+    counts: list[list[int]] = Field(
+        description="Row-major matrix of satellite counts.",
+    )
+    total_satellites: int = Field(
+        description="Total satellites whose orbit fell in the binning window.",
+    )
+
+
+class ConjunctionTimelinePoint(BaseModel):
+    """One day in the ``GET /api/heatmap/conjunctions-timeline`` response."""
+
+    date: date
+    miss_lt_1km: int
+    miss_lt_5km: int
+    total: int
+
+
+# --- Alert subsystem schemas -------------------------------------------------
+
+
+class AlertSubscriptionCreate(BaseModel):
+    """Payload accepted by ``POST /api/alerts/subscriptions``."""
+
+    email_or_webhook_url: str = Field(
+        description="Either a https:// webhook URL or a valid email address.",
+        min_length=3,
+        max_length=512,
+    )
+    norad_ids: list[int] = Field(
+        description="NORAD catalog ids of satellites to watch.",
+        min_length=1,
+        max_length=50,
+    )
+    miss_distance_km_threshold: float = Field(
+        default=5.0,
+        ge=0.1,
+        le=50.0,
+        description="Conjunctions at or below this miss distance trigger an alert.",
+    )
+
+
+class AlertSubscriptionPublic(BaseModel):
+    """Subscription view returned by GET / DELETE manage endpoints."""
+
+    id: str
+    email_or_webhook_url: str
+    norad_ids: list[int]
+    miss_distance_km_threshold: float
+    is_active: bool
+    created_at: datetime
+    last_notified_at: datetime | None = None
+
+
+class AlertSubscriptionCreated(BaseModel):
+    """Payload returned by ``POST /api/alerts/subscriptions``."""
+
+    id: str
+    manage_url: str
