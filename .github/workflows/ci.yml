@@ -73,6 +73,9 @@ jobs:
       - name: Unit tests (vitest)
         run: pnpm test
 
+      - name: Build (vite)
+        run: pnpm build
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium firefox
 
