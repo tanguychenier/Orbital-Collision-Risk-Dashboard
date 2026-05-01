@@ -1,18 +1,91 @@
 import { http, HttpResponse } from 'msw';
+import type { Satellite } from '@/api/types';
 import {
   mockConjunctionDetails,
   mockConjunctions,
   mockHealth,
+  mockHeatmap,
   mockSatellites,
-  mockStats
+  mockStats,
+  mockTimeline
 } from './fixtures';
 
 const API = '/api';
+
+function findSatelliteByIdentifier(identifier: string): Satellite | undefined {
+  if (/^\d+$/.test(identifier)) {
+    const norad = Number(identifier);
+    return mockSatellites.find((s) => s.norad_id === norad);
+  }
+  const lower = identifier.toLowerCase();
+  return mockSatellites.find((s) => s.name.toLowerCase() === lower);
+}
 
 export const handlers = [
   http.get(`${API}/health`, () => HttpResponse.json(mockHealth)),
 
   http.get(`${API}/stats`, () => HttpResponse.json(mockStats)),
+
+  http.get(`${API}/satellites/search`, ({ request }) => {
+    const url = new URL(request.url);
+    const raw = url.searchParams.get('q')?.trim() ?? '';
+    const limit = Number(url.searchParams.get('limit') ?? 20);
+    if (raw === '') return HttpResponse.json(mockSatellites.slice(0, limit));
+    const q = raw.toLowerCase();
+    const isDigit = /^\d+$/.test(raw);
+    const filtered = mockSatellites.filter((s) => {
+      if (s.name.toLowerCase().includes(q)) return true;
+      if (isDigit && s.norad_id === Number(raw)) return true;
+      return false;
+    });
+    return HttpResponse.json(filtered.slice(0, limit));
+  }),
+
+  http.get(`${API}/satellites/:identifier/conjunctions`, ({ params, request }) => {
+    const identifier = String(params.identifier);
+    const sat = findSatelliteByIdentifier(identifier);
+    if (!sat) {
+      return HttpResponse.json({ detail: 'satellite not found' }, { status: 404 });
+    }
+    const url = new URL(request.url);
+    const hours = Number(url.searchParams.get('hours') ?? 168);
+    const limit = Number(url.searchParams.get('limit') ?? 200);
+    const offset = Number(url.searchParams.get('offset') ?? 0);
+    const cutoff = Date.now() + hours * 3_600_000;
+    const filtered = mockConjunctions.filter((c) => {
+      const involves = c.sat_a.norad_id === sat.norad_id || c.sat_b.norad_id === sat.norad_id;
+      const inWindow = new Date(c.tca).getTime() <= cutoff;
+      return involves && inWindow;
+    });
+    return HttpResponse.json(filtered.slice(offset, offset + limit));
+  }),
+
+  http.get(`${API}/satellites/:identifier`, ({ params }) => {
+    const identifier = String(params.identifier);
+    const sat = findSatelliteByIdentifier(identifier);
+    if (!sat) {
+      return HttpResponse.json({ detail: 'satellite not found' }, { status: 404 });
+    }
+    const now = Date.now();
+    const counts = mockConjunctions.reduce(
+      (acc, c) => {
+        const involves = c.sat_a.norad_id === sat.norad_id || c.sat_b.norad_id === sat.norad_id;
+        if (!involves) return acc;
+        const dt = new Date(c.tca).getTime() - now;
+        if (dt < 0) return acc;
+        if (dt <= 24 * 3_600_000) acc.next_24h += 1;
+        if (dt <= 72 * 3_600_000) acc.next_72h += 1;
+        if (dt <= 7 * 24 * 3_600_000) acc.next_7d += 1;
+        return acc;
+      },
+      { next_24h: 0, next_72h: 0, next_7d: 0 }
+    );
+    return HttpResponse.json({
+      satellite: sat,
+      last_tle_epoch: new Date(now - 3 * 3_600_000).toISOString(),
+      stats: counts
+    });
+  }),
 
   http.get(`${API}/satellites`, ({ request }) => {
     const url = new URL(request.url);
@@ -45,5 +118,64 @@ export const handlers = [
       return HttpResponse.json({ detail: 'Not found' }, { status: 404 });
     }
     return HttpResponse.json(detail);
+  }),
+
+  http.get(`${API}/heatmap/altitude-inclination`, () => HttpResponse.json(mockHeatmap)),
+
+  http.get(`${API}/heatmap/conjunctions-timeline`, ({ request }) => {
+    const url = new URL(request.url);
+    const days = Number(url.searchParams.get('days') ?? 30);
+    const points = mockTimeline(days);
+    return HttpResponse.json(points);
+  }),
+
+  http.post(`${API}/alerts/subscriptions`, async ({ request }) => {
+    const body = (await request.json()) as {
+      email_or_webhook_url?: unknown;
+      norad_ids?: unknown;
+      miss_distance_km_threshold?: unknown;
+    };
+    const target = typeof body.email_or_webhook_url === 'string' ? body.email_or_webhook_url : '';
+    const looksValid =
+      /^https?:\/\/[A-Za-z0-9._-]+(:\d+)?(\/.*)?$/.test(target) ||
+      /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(target);
+    if (!looksValid) {
+      return HttpResponse.json({ detail: 'invalid target' }, { status: 422 });
+    }
+    if (!Array.isArray(body.norad_ids) || body.norad_ids.length === 0) {
+      return HttpResponse.json({ detail: 'norad_ids required' }, { status: 422 });
+    }
+    const id = `mock-${Math.random().toString(16).slice(2, 10)}`;
+    const token = `tok-${Math.random().toString(16).slice(2, 18)}`;
+    return HttpResponse.json(
+      { id, manage_url: `http://localhost:8000/alerts/${id}?token=${token}` },
+      { status: 201 }
+    );
+  }),
+
+  http.get(`${API}/alerts/subscriptions/:id`, ({ params, request }) => {
+    const url = new URL(request.url);
+    const token = url.searchParams.get('token') ?? '';
+    if (!token.startsWith('tok-')) {
+      return HttpResponse.json({ detail: 'subscription not found' }, { status: 404 });
+    }
+    return HttpResponse.json({
+      id: String(params.id),
+      email_or_webhook_url: 'ops@example.com',
+      norad_ids: [25544],
+      miss_distance_km_threshold: 5,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      last_notified_at: null
+    });
+  }),
+
+  http.delete(`${API}/alerts/subscriptions/:id`, ({ request }) => {
+    const url = new URL(request.url);
+    const token = url.searchParams.get('token') ?? '';
+    if (!token.startsWith('tok-')) {
+      return HttpResponse.json({ detail: 'subscription not found' }, { status: 404 });
+    }
+    return new HttpResponse(null, { status: 204 });
   })
 ];

@@ -6,6 +6,24 @@ const routes: RouteRecordRaw[] = [
     name: 'dashboard',
     component: () => import('@/views/Dashboard.vue'),
     meta: { title: 'Dashboard' }
+  },
+  {
+    path: '/heatmap',
+    name: 'heatmap',
+    component: () => import('@/views/Heatmap.vue'),
+    meta: { title: 'Heatmap' }
+  },
+  {
+    path: '/satellite/:noradId',
+    name: 'satellite-detail',
+    component: () => import('@/views/SatelliteDetail.vue'),
+    meta: { title: 'Satellite' }
+  },
+  {
+    path: '/alerts',
+    name: 'alerts',
+    component: () => import('@/views/Alerts.vue'),
+    meta: { title: 'Alerts' }
   }
 ];
 
