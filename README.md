@@ -1,6 +1,6 @@
 # Orbital Collision Risk Dashboard
 
-[![CI](https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Python 3.12+](https://img.shields.io/badge/Python-3.12+-3776AB.svg)](https://www.python.org/) [![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D.svg)](https://vuejs.org/) [![Docker](https://img.shields.io/badge/Docker-required-2496ED.svg)](https://www.docker.com/)
+[![CI](https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Python 3.12+](https://img.shields.io/badge/Python-3.12+-3776AB.svg)](https://www.python.org/) [![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D.svg)](https://vuejs.org/) [![Docker](https://img.shields.io/badge/Docker-required-2496ED.svg)](https://www.docker.com/)
 
 > A free, open-source dashboard that screens **publicly available TLE data** for upcoming **satellite-to-satellite close approaches** and shows them on a 3D globe. Useful for operators wanting a sanity check, researchers, journalists, and anyone interested in the growing congestion of low Earth orbit.
 
@@ -54,7 +54,7 @@ The backend follows a **hexagonal architecture**: the domain layer knows nothing
 ### Run the whole stack with Docker
 
 ```sh
-git clone https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard.git
+git clone https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard.git
 cd Orbital-Collision-Risk-Dashboard
 cp .env.example .env
 docker compose up -d

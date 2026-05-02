@@ -17,7 +17,7 @@ const REQUIRED_LINKS: ReadonlyArray<{ label: RegExp; href: string }> = [
   { label: /tansoftware\.com/i, href: 'https://www.tansoftware.com' }
 ];
 
-const REPO_URL = 'https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard';
+const REPO_URL = 'https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard';
 
 async function gotoDashboard(page: Page): Promise<void> {
   await page.goto('/');

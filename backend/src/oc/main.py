@@ -87,16 +87,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "email to be notified when one of your satellites has a close "
             "approach.\n\n"
             "Source code, issue tracker and contribution guide: "
-            "[Tan-Software/Orbital-Collision-Risk-Dashboard]"
-            "(https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard)."
+            "[tanguychenier/Orbital-Collision-Risk-Dashboard]"
+            "(https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard)."
         ),
         contact={
-            "name": "Tan-Software",
-            "url": "https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard",
+            "name": "Tanguy Chénier",
+            "url": "https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard",
         },
         license_info={
             "name": "MIT",
-            "url": "https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard/blob/main/LICENSE",
+            "url": "https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard/blob/main/LICENSE",
         },
     )
     app.add_middleware(

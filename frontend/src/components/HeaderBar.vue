@@ -98,7 +98,7 @@ const aboutLinks: ReadonlyArray<{ label: string; href: string; icon: string }> =
           />
         </RouterLink>
         <a
-          href="https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard"
+          href="https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard"
           target="_blank"
           rel="noopener noreferrer"
           class="hidden sm:inline-flex"
