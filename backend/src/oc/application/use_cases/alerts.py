@@ -162,9 +162,9 @@ def build_discord_embed(
     """
     sat_a = f"{conjunction['sat_a_name']} ({conjunction['sat_a_norad_id']})"
     sat_b = f"{conjunction['sat_b_name']} ({conjunction['sat_b_norad_id']})"
-    miss = float(conjunction["miss_distance_km"])
-    rel_v = float(conjunction["relative_velocity_km_s"])
-    prob = float(conjunction["probability"])
+    miss = float(conjunction["miss_distance_km"])  # type: ignore[arg-type]
+    rel_v = float(conjunction["relative_velocity_km_s"])  # type: ignore[arg-type]
+    prob = float(conjunction["probability"])  # type: ignore[arg-type]
     tca = conjunction["tca"]
     tca_str = tca.isoformat() if isinstance(tca, datetime) else str(tca)
     summary = (
