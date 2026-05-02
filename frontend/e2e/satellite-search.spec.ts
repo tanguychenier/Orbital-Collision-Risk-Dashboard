@@ -34,5 +34,10 @@ test.describe('satellite search', () => {
     await expect(page.getByTestId('satellite-name')).toContainText('STARLINK');
     await expect(page.getByTestId('satellite-norad')).toContainText('44713');
     await expect(page.getByTestId('copy-permalink')).toBeVisible();
+
+    const tleLink = page.getByTestId('download-tle');
+    await expect(tleLink).toBeVisible();
+    await expect(tleLink).toHaveAttribute('href', '/api/satellites/44713/tle.txt');
+    await expect(tleLink).toHaveAttribute('download', '44713.tle');
   });
 });

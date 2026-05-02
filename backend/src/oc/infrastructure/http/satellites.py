@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import PlainTextResponse
 from sqlalchemy import Select, case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -104,6 +105,43 @@ async def get_satellite(
         satellite=SatelliteDetail.model_validate(record, from_attributes=True),
         last_tle_epoch=_ensure_utc(last_tle.epoch) if last_tle is not None else None,
         stats=counts,
+    )
+
+
+@router.get(
+    "/satellites/{identifier}/tle.txt",
+    response_class=PlainTextResponse,
+    responses={
+        200: {"content": {"text/plain": {}}},
+        404: {"description": "Satellite or TLE not found."},
+    },
+)
+async def get_satellite_tle(
+    identifier: str,
+    session: AsyncSession = Depends(get_db_session),
+) -> PlainTextResponse:
+    """Return the latest 3-line TLE for ``identifier`` as plain text.
+
+    The classic 3-line block (name + line1 + line2) is what amateur
+    radio software (gpredict, Orbitron, ISS-Detector, ...) and CCSDS
+    OEM-aware tooling expect; serving it directly avoids forcing every
+    client to do the JSON-to-TLE rewrite themselves.
+    """
+    repo = SQLAlchemySatelliteRepository(session)
+    found = await repo.find_by_identifier(identifier)
+    if found is None:
+        raise HTTPException(status_code=404, detail="satellite not found")
+    record, last_tle = found
+    if last_tle is None:
+        raise HTTPException(status_code=404, detail="no TLE available for this satellite")
+    body = f"{record.name}\r\n{last_tle.line1}\r\n{last_tle.line2}\r\n"
+    return PlainTextResponse(
+        content=body,
+        media_type="text/plain; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{record.norad_id}.tle"',
+            "Cache-Control": "public, max-age=900",
+        },
     )
 
 

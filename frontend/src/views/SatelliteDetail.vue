@@ -143,7 +143,7 @@ function setMaxDistance(): void {
                 {{ t('satellite.norad') }}: <span data-testid="satellite-norad">{{ satellite.norad_id }}</span>
               </p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <Button
                 :icon="satelliteIsWatched ? 'pi pi-star-fill' : 'pi pi-star'"
                 :label="satelliteIsWatched ? t('satellite.unwatch') : t('satellite.watch')"
@@ -155,6 +155,22 @@ function setMaxDistance(): void {
                 data-testid="watchlist-toggle"
                 @click="toggleWatch"
               />
+              <a
+                v-if="noradId"
+                :href="`/api/satellites/${noradId}/tle.txt`"
+                :download="`${noradId}.tle`"
+                class="inline-flex"
+                data-testid="download-tle"
+              >
+                <Button
+                  icon="pi pi-download"
+                  :label="t('satellite.downloadTle')"
+                  severity="secondary"
+                  outlined
+                  size="small"
+                  :aria-label="t('satellite.downloadTle')"
+                />
+              </a>
               <Button
                 :icon="permalinkCopied ? 'pi pi-check' : 'pi pi-link'"
                 :label="permalinkCopied ? t('satellite.permalinkCopied') : t('satellite.copyPermalink')"
