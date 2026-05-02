@@ -1,30 +1,50 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type PluginOption } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from '@tailwindcss/vite';
 import cesium from 'vite-plugin-cesium';
 import { fileURLToPath, URL } from 'node:url';
 
+/**
+ * Inject the Cesium UMD bundle as a `<script>` tag in dev only. In dev,
+ * Vite's esbuild dep optimiser pre-bundles Cesium from its ES-source
+ * tangle and the resulting JS silently fails to render the globe on
+ * Firefox 130+ (Chromium masks the bug). Loading the prebuilt UMD
+ * `/cesium/Cesium.js` (which `vite-plugin-cesium` already serves under
+ * `/cesium/`) sidesteps the dep optimiser entirely and exposes a global
+ * `window.Cesium` we can read directly. In production the same plugin
+ * already injects this tag as part of its `externalGlobals` workflow,
+ * so this dev-only injection avoids duplicate loads.
+ */
+function injectCesiumUmdInDev(): PluginOption {
+  return {
+    name: 'oc:inject-cesium-umd-in-dev',
+    apply: 'serve',
+    transformIndexHtml() {
+      return [
+        {
+          tag: 'script',
+          attrs: { src: '/cesium/Cesium.js' },
+          injectTo: 'head'
+        }
+      ];
+    }
+  };
+}
+
 export default defineConfig({
-  plugins: [vue(), tailwindcss(), cesium()],
+  plugins: [vue(), tailwindcss(), cesium(), injectCesiumUmdInDev()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
-  // Pre-bundle Cesium with esbuild so its internal cyclic imports are
-  // resolved BEFORE Rollup chunking kicks in. Without this:
-  //   - the production build hits a Temporal-Dead-Zone ReferenceError
-  //     ("Cannot access 't' before initialization") inside the lazy chunk;
-  //   - the dev server fails to resolve the CommonJS interop for Cesium's
-  //     transitive deps (mersenne-twister, etc.).
-  // `keepNames: true` is mandatory to avoid identifier collisions inside
-  // the Cesium bundle. The same flag is mirrored in `esbuild.keepNames`
-  // for the production rollup pass.
+  // We no longer pre-bundle Cesium with esbuild: the prebuilt UMD
+  // bundle is loaded as a `<script>` tag instead (see
+  // `injectCesiumUmdInDev` above and `vite-plugin-cesium`'s prod
+  // injection). Excluding it from the optimiser also keeps cold dev
+  // starts much faster.
   optimizeDeps: {
-    include: ['cesium'],
-    esbuildOptions: {
-      keepNames: true
-    }
+    exclude: ['cesium']
   },
   server: {
     port: 5173,
