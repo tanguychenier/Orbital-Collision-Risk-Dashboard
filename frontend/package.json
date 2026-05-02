@@ -21,7 +21,7 @@
     "@primevue/themes": "^4.2.5",
     "@tanstack/vue-query": "^5.62.7",
     "axios": "^1.7.9",
-    "cesium": "^1.124.0",
+    "cesium": "^1.141.0",
     "echarts": "^6.0.0",
     "pinia": "^2.3.0",
     "primeicons": "^7.0.0",
