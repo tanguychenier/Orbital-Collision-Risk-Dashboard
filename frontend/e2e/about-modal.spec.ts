@@ -4,9 +4,9 @@
  * Domain rule: the credits / contact information of the application must be
  * presented in a modal opened from the header, NEVER repeated in the footer.
  * The modal must be reachable by mouse, keyboard, and assistive technologies,
- * and it must expose every external link required by the project's authoring
- * conventions (LinkedIn, Tan-Software organisation, personal account, company
- * website).
+ * on every supported viewport (mobile / tablet / desktop), and it must expose
+ * every external link required by the project's authoring conventions
+ * (LinkedIn, Tan-Software organisation, personal account, company website).
  */
 import { test, expect, type Page } from '@playwright/test';
 
@@ -31,30 +31,13 @@ async function openAboutDialog(page: Page): Promise<void> {
   await expect(page.getByTestId('about-dialog')).toBeVisible();
 }
 
-// On mobile (< Tailwind `md` = 768 px) the About button and the
-// header GitHub link are hidden by design: the header is reserved for
-// navigation buttons and the theme toggle. The footer-only "does NOT
-// repeat the author block" assertion stays active on every viewport
-// because the footer is rendered everywhere.
-function isMobileProject(name: string): boolean {
-  return name.endsWith('mobile');
-}
-
 test.describe('about feature', () => {
-  test('opens an About modal from the header button', async ({ page }, testInfo) => {
-    test.skip(
-      isMobileProject(testInfo.project.name),
-      'About button is intentionally hidden on mobile.'
-    );
+  test('opens an About modal from the header button', async ({ page }) => {
     await gotoDashboard(page);
     await openAboutDialog(page);
   });
 
-  test('exposes every required authoring link inside the modal', async ({ page }, testInfo) => {
-    test.skip(
-      isMobileProject(testInfo.project.name),
-      'About button is intentionally hidden on mobile.'
-    );
+  test('exposes every required authoring link inside the modal', async ({ page }) => {
     await gotoDashboard(page);
     await openAboutDialog(page);
     const dialog = page.getByTestId('about-dialog');
@@ -67,11 +50,7 @@ test.describe('about feature', () => {
     }
   });
 
-  test('credits Tansoftware and Tanguy Chénier as the author', async ({ page }, testInfo) => {
-    test.skip(
-      isMobileProject(testInfo.project.name),
-      'About button is intentionally hidden on mobile.'
-    );
+  test('credits Tansoftware and Tanguy Chénier as the author', async ({ page }) => {
     await gotoDashboard(page);
     await openAboutDialog(page);
     const dialog = page.getByTestId('about-dialog');
@@ -92,24 +71,14 @@ test.describe('about feature', () => {
     await expect(sourceLink).toHaveAttribute('href', REPO_URL);
   });
 
-  test('header GitHub button points at the canonical repository URL', async ({
-    page
-  }, testInfo) => {
-    test.skip(
-      isMobileProject(testInfo.project.name),
-      'Header GitHub link is intentionally hidden on mobile.'
-    );
+  test('header GitHub button points at the canonical repository URL', async ({ page }) => {
     await gotoDashboard(page);
     const header = page.getByTestId('header-bar');
     const githubLink = header.getByRole('link', { name: /github/i }).first();
     await expect(githubLink).toHaveAttribute('href', REPO_URL);
   });
 
-  test('closes when the dismissable backdrop is clicked', async ({ page }, testInfo) => {
-    test.skip(
-      isMobileProject(testInfo.project.name),
-      'About button is intentionally hidden on mobile.'
-    );
+  test('closes when the dismissable backdrop is clicked', async ({ page }) => {
     await gotoDashboard(page);
     await openAboutDialog(page);
     // PrimeVue Dialog has dismissable-mask: clicking outside closes it.
