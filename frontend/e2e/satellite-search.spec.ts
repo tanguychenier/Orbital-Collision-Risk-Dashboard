@@ -29,7 +29,14 @@ test.describe('satellite search', () => {
       await searchInput.fill('STARLINK');
       const option = page.getByTestId('satellite-search-option-44713');
       await expect(option).toBeVisible({ timeout: 10_000 });
-      await option.click();
+      // Keyboard select rather than mouse click: PrimeVue's
+      // AutoComplete dropdown overlaps the input vertically and
+      // Playwright on Firefox occasionally treats the input as the
+      // pointer target during the option click. ArrowDown + Enter
+      // mirrors how the keyboard contract works in production and
+      // avoids the layout-overlap flake entirely.
+      await searchInput.press('ArrowDown');
+      await searchInput.press('Enter');
     }
 
     await page.waitForURL('**/satellite/44713', { timeout: 10_000 });

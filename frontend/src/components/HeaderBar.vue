@@ -101,7 +101,7 @@ const aboutLinks: ReadonlyArray<{ label: string; href: string; icon: string }> =
           href="https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard"
           target="_blank"
           rel="noopener noreferrer"
-          class="hidden sm:inline-flex"
+          class="inline-flex"
         >
           <Button
             severity="secondary"
@@ -110,15 +110,17 @@ const aboutLinks: ReadonlyArray<{ label: string; href: string; icon: string }> =
             :aria-label="t('nav.github')"
             icon="pi pi-github"
             :label="t('nav.github')"
+            :pt="{ label: { class: 'hidden sm:inline' } }"
           />
         </a>
         <Button
           severity="secondary"
           text
           size="small"
-          class="hidden md:inline-flex"
+          icon="pi pi-info-circle"
           :label="t('nav.about')"
           :aria-label="t('nav.about')"
+          :pt="{ label: { class: 'hidden md:inline' } }"
           data-testid="about-button"
           @click="aboutOpen = true"
         />
