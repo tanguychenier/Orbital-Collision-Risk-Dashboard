@@ -11,6 +11,7 @@ import GlobeView from '@/components/GlobeView.vue';
 import ConjunctionTable from '@/components/ConjunctionTable.vue';
 import StatCard from '@/components/StatCard.vue';
 import { useSatellite, useSatelliteConjunctions } from '@/composables/useSatellite';
+import { useWatchlist } from '@/composables/useWatchlist';
 
 const route = useRoute();
 const { t } = useI18n();
@@ -36,6 +37,16 @@ const satellite = computed(() => detail.value?.satellite ?? null);
 const stats = computed(() => detail.value?.stats ?? null);
 
 const permalinkCopied = ref(false);
+
+const watchlist = useWatchlist();
+const satelliteIsWatched = computed<boolean>(() =>
+  satellite.value !== null && watchlist.isWatched(satellite.value.norad_id)
+);
+
+function toggleWatch(): void {
+  if (satellite.value === null) return;
+  watchlist.toggle(satellite.value.norad_id);
+}
 
 async function copyPermalink(): Promise<void> {
   if (!noradId.value) return;
@@ -133,6 +144,17 @@ function setMaxDistance(): void {
               </p>
             </div>
             <div class="flex items-center gap-2">
+              <Button
+                :icon="satelliteIsWatched ? 'pi pi-star-fill' : 'pi pi-star'"
+                :label="satelliteIsWatched ? t('satellite.unwatch') : t('satellite.watch')"
+                :severity="satelliteIsWatched ? 'warn' : 'secondary'"
+                :outlined="!satelliteIsWatched"
+                size="small"
+                :aria-label="satelliteIsWatched ? t('satellite.unwatch') : t('satellite.watch')"
+                :aria-pressed="satelliteIsWatched"
+                data-testid="watchlist-toggle"
+                @click="toggleWatch"
+              />
               <Button
                 :icon="permalinkCopied ? 'pi pi-check' : 'pi pi-link'"
                 :label="permalinkCopied ? t('satellite.permalinkCopied') : t('satellite.copyPermalink')"

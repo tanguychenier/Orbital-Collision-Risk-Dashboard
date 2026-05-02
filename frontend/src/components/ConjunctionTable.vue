@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import DataTable, { type DataTableSortEvent } from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -7,7 +7,9 @@ import Button from 'primevue/button';
 import Slider from 'primevue/slider';
 import Tag from 'primevue/tag';
 import ProgressBar from 'primevue/progressbar';
+import ToggleSwitch from 'primevue/toggleswitch';
 import type { ConjunctionListItem } from '@/api/types';
+import { useWatchlist } from '@/composables/useWatchlist';
 
 interface Props {
   rows: ConjunctionListItem[];
@@ -37,7 +39,18 @@ const sliderValue = computed<number>({
   set: (v) => emit('update:maxDistanceKm', v)
 });
 
-const sortedRows = computed(() => [...props.rows]);
+const watchlist = useWatchlist();
+const onlyWatched = ref<boolean>(false);
+
+const visibleRows = computed<ConjunctionListItem[]>(() => {
+  if (!onlyWatched.value) return [...props.rows];
+  return props.rows.filter(
+    (r) =>
+      watchlist.isWatched(r.sat_a.norad_id) || watchlist.isWatched(r.sat_b.norad_id)
+  );
+});
+
+const sortedRows = computed(() => visibleRows.value);
 
 // Risk-band thresholds in kilometres. The cutoffs match the screening
 // triage convention used elsewhere in the codebase (see backend
@@ -86,6 +99,18 @@ function onSort(_e: DataTableSortEvent) {
           {{ rows.length }} events &middot; max distance {{ maxDistanceKm.toFixed(1) }} km
         </p>
       </div>
+      <label
+        class="inline-flex items-center gap-2 text-xs text-white/70 cursor-pointer"
+        :class="{ 'opacity-50 cursor-not-allowed': watchlist.count.value === 0 }"
+        data-testid="only-watched-toggle"
+      >
+        <ToggleSwitch
+          v-model="onlyWatched"
+          :disabled="watchlist.count.value === 0"
+          :aria-label="t('table.onlyWatched')"
+        />
+        <span>{{ t('table.onlyWatched') }} ({{ watchlist.count.value }})</span>
+      </label>
       <div class="flex items-center gap-1.5">
         <a
           :href="csvUrl"
@@ -167,12 +192,28 @@ function onSort(_e: DataTableSortEvent) {
       </Column>
       <Column field="sat_a.name" :header="t('table.satA')" sortable>
         <template #body="{ data }">
-          <span class="font-medium truncate block max-w-[160px]">{{ data.sat_a.name }}</span>
+          <span class="inline-flex items-center gap-1.5 max-w-[180px]">
+            <i
+              v-if="watchlist.isWatched(data.sat_a.norad_id)"
+              class="pi pi-star-fill text-amber-300 text-[10px] shrink-0"
+              :aria-label="t('table.watchedSatellite')"
+              :data-testid="`watched-${data.sat_a.norad_id}`"
+            />
+            <span class="font-medium truncate">{{ data.sat_a.name }}</span>
+          </span>
         </template>
       </Column>
       <Column field="sat_b.name" :header="t('table.satB')" sortable>
         <template #body="{ data }">
-          <span class="font-medium truncate block max-w-[160px]">{{ data.sat_b.name }}</span>
+          <span class="inline-flex items-center gap-1.5 max-w-[180px]">
+            <i
+              v-if="watchlist.isWatched(data.sat_b.norad_id)"
+              class="pi pi-star-fill text-amber-300 text-[10px] shrink-0"
+              :aria-label="t('table.watchedSatellite')"
+              :data-testid="`watched-${data.sat_b.norad_id}`"
+            />
+            <span class="font-medium truncate">{{ data.sat_b.name }}</span>
+          </span>
         </template>
       </Column>
       <Column field="miss_distance_km" :header="t('table.missDistance')" sortable>

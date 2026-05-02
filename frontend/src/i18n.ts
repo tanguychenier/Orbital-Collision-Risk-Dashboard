@@ -30,7 +30,9 @@ const messages = {
       empty: 'No conjunctions matching the current filters.',
       view: 'View details',
       exportCsv: 'CSV',
-      subscribeCalendar: 'Calendar feed'
+      subscribeCalendar: 'Calendar feed',
+      onlyWatched: 'Only my satellites',
+      watchedSatellite: 'On your watchlist'
     },
     globe: {
       title: '3D situational view',
@@ -76,7 +78,9 @@ const messages = {
       copyPermalink: 'Copy permalink',
       permalinkCopied: 'Permalink copied to clipboard',
       notFound: 'Satellite not found.',
-      loading: 'Loading satellite...'
+      loading: 'Loading satellite...',
+      watch: 'Watch',
+      unwatch: 'Watching'
     }
   }
 };
