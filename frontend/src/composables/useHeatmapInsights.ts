@@ -1,7 +1,4 @@
-import type {
-  ConjunctionTimelinePoint,
-  HeatmapAltitudeInclinationResponse
-} from '@/api/types';
+import type { ConjunctionTimelinePoint, HeatmapAltitudeInclinationResponse } from '@/api/types';
 
 const PERCENT_PRECISION = 1;
 const TREND_STABLE_PCT = 5;
@@ -100,7 +97,9 @@ export function mostCongestedInclination(
   };
 }
 
-export function weekOverWeekTrend(timeline: readonly ConjunctionTimelinePoint[]): TrendInsight | null {
+export function weekOverWeekTrend(
+  timeline: readonly ConjunctionTimelinePoint[]
+): TrendInsight | null {
   if (timeline.length < 2 * WEEK_OVER_WEEK_DAYS) {
     return null;
   }

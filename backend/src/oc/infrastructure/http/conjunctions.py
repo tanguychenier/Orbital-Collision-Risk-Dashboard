@@ -15,7 +15,7 @@ from sqlalchemy.orm import selectinload
 
 from oc.config import Settings, get_settings
 from oc.db import get_db_session
-from oc.infrastructure.persistence.models import Conjunction, TLE
+from oc.infrastructure.persistence.models import TLE, Conjunction
 from oc.infrastructure.propagation.geodetic import ecef_to_geodetic, teme_to_ecef
 from oc.infrastructure.propagation.sgp4_propagator import (
     PropagationError,
@@ -223,15 +223,11 @@ def _propagate_to_geodetic(tle: TLE, tca: datetime) -> GeodeticTCAPosition | Non
         satrec = satrec_from_tle(tle.line1, tle.line2)
         position_teme_km, _velocity = propagate_single(satrec, _ensure_utc(tca))
     except (PropagationError, ValueError, RuntimeError) as exc:
-        _log.warning(
-            "skipping TCA position for tle %d: %s", tle.id, exc, exc_info=False
-        )
+        _log.warning("skipping TCA position for tle %d: %s", tle.id, exc, exc_info=False)
         return None
     ecef = teme_to_ecef(position_teme_km, _ensure_utc(tca))
     lat, lon, alt = ecef_to_geodetic(ecef)
-    return GeodeticTCAPosition(
-        latitude_deg=lat, longitude_deg=lon, altitude_km=alt
-    )
+    return GeodeticTCAPosition(latitude_deg=lat, longitude_deg=lon, altitude_km=alt)
 
 
 def _to_list_item(c: Conjunction) -> ConjunctionListItem:

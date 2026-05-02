@@ -3,10 +3,7 @@ import { computed, defineAsyncComponent } from 'vue';
 import { useQuery } from '@tanstack/vue-query';
 import HeaderBar from '@/components/HeaderBar.vue';
 import FooterBar from '@/components/FooterBar.vue';
-import {
-  fetchAltitudeInclinationHeatmap,
-  fetchConjunctionsTimeline
-} from '@/api/heatmap';
+import { fetchAltitudeInclinationHeatmap, fetchConjunctionsTimeline } from '@/api/heatmap';
 import {
   buildInsights,
   formatAltitudeInsight,
@@ -60,9 +57,7 @@ const timelineError = computed(() => timelineQuery.isError.value);
       data-testid="heatmap-view"
     >
       <header class="flex flex-col gap-1">
-        <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">
-          Orbital congestion heatmap
-        </h1>
+        <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Orbital congestion heatmap</h1>
         <p class="text-sm text-white/60">
           Active satellite density per altitude × inclination band, plus a
           {{ TIMELINE_DAYS }}-day daily conjunction timeline.

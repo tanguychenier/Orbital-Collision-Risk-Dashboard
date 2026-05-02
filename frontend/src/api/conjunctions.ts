@@ -39,9 +39,7 @@ export async function fetchConjunctionDetail(id: string): Promise<ConjunctionDet
   return data;
 }
 
-export async function searchSatellites(
-  params: SatelliteSearchQuery = {}
-): Promise<Satellite[]> {
+export async function searchSatellites(params: SatelliteSearchQuery = {}): Promise<Satellite[]> {
   const { data } = await apiClient.get<Satellite[]>('/satellites/search', { params });
   return data;
 }

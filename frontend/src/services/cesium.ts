@@ -98,13 +98,10 @@ export async function createGlobe(opts: InitOptions): Promise<CesiumViewerHandle
     baseLayer: ionToken
       ? undefined
       : new Cesium.ImageryLayer(
-          await Cesium.SingleTileImageryProvider.fromUrl(
-            '/earth-natural-earth-ii.jpg',
-            {
-              rectangle: Cesium.Rectangle.fromDegrees(-180, -90, 180, 90),
-              credit: new Cesium.Credit('Natural Earth II - public domain', true)
-            }
-          )
+          await Cesium.SingleTileImageryProvider.fromUrl('/earth-natural-earth-ii.jpg', {
+            rectangle: Cesium.Rectangle.fromDegrees(-180, -90, 180, 90),
+            credit: new Cesium.Credit('Natural Earth II - public domain', true)
+          })
         )
   });
   viewer.scene.globe.enableLighting = true;

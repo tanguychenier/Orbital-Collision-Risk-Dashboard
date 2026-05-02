@@ -203,9 +203,7 @@ async def test_conjunction_detail_404(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_calendar_feed_is_valid_ical(
-    client: AsyncClient, db_session: AsyncSession
-) -> None:
+async def test_calendar_feed_is_valid_ical(client: AsyncClient, db_session: AsyncSession) -> None:
     """``/api/calendar.ics`` returns a single VEVENT for the seeded conjunction."""
     seeded = await _seed_database(db_session)
     response = await client.get("/api/calendar.ics")
@@ -240,9 +238,7 @@ async def test_calendar_feed_filters_by_norad_id(
 
 
 @pytest.mark.asyncio
-async def test_conjunctions_csv_export(
-    client: AsyncClient, db_session: AsyncSession
-) -> None:
+async def test_conjunctions_csv_export(client: AsyncClient, db_session: AsyncSession) -> None:
     """``/api/conjunctions.csv`` streams a parseable CSV with a header row."""
     seeded = await _seed_database(db_session)
     response = await client.get("/api/conjunctions.csv")
@@ -276,9 +272,7 @@ async def test_conjunctions_csv_filters_by_norad_id(
 
 
 @pytest.mark.asyncio
-async def test_satellite_tle_export(
-    client: AsyncClient, db_session: AsyncSession
-) -> None:
+async def test_satellite_tle_export(client: AsyncClient, db_session: AsyncSession) -> None:
     """``/api/satellites/{id}/tle.txt`` returns the 3-line TLE as plain text."""
     await _seed_database(db_session)
     response = await client.get("/api/satellites/10001/tle.txt")

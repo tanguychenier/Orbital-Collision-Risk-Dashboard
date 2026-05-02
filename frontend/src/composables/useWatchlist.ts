@@ -79,9 +79,7 @@ export function useWatchlist() {
     persist();
   }
 
-  const ids = computed<readonly number[]>(() =>
-    [...watched.value].sort((a, b) => a - b)
-  );
+  const ids = computed<readonly number[]>(() => [...watched.value].sort((a, b) => a - b));
   const count = computed<number>(() => watched.value.size);
 
   return {

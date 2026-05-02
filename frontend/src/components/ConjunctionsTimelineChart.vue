@@ -24,7 +24,9 @@ async function ensureChart(): Promise<ChartHandle | null> {
     return null;
   }
   const echarts = await import('echarts');
-  const chart = echarts.init(containerRef.value, undefined, { renderer: 'canvas' }) as unknown as ChartHandle;
+  const chart = echarts.init(containerRef.value, undefined, {
+    renderer: 'canvas'
+  }) as unknown as ChartHandle;
   instanceRef.value = chart;
   if (typeof ResizeObserver !== 'undefined') {
     const observer = new ResizeObserver(() => chart.resize());

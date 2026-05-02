@@ -51,8 +51,12 @@ def gmst_radians(when: datetime) -> float:
     """
     u = _to_utc(when)
     jd_int, jd_frac = jday(
-        u.year, u.month, u.day,
-        u.hour, u.minute, u.second + u.microsecond * 1e-6,
+        u.year,
+        u.month,
+        u.day,
+        u.hour,
+        u.minute,
+        u.second + u.microsecond * 1e-6,
     )
     jd = jd_int + jd_frac
     t = (jd - 2451545.0) / 36525.0

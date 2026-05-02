@@ -182,7 +182,10 @@ export const handlers = [
       (c) => c.miss_distance_km <= max && new Date(c.tca).getTime() <= cutoff
     );
     const fmt = (iso: string) =>
-      new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+      new Date(iso)
+        .toISOString()
+        .replace(/[-:]/g, '')
+        .replace(/\.\d+Z$/, 'Z');
     const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//mock//EN'];
     for (const c of filtered) {
       lines.push(

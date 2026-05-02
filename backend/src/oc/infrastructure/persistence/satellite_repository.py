@@ -76,10 +76,7 @@ class SQLAlchemySatelliteRepository:
             if normalised.isdigit():
                 conditions.append(Satellite.norad_id == int(normalised))
             stmt = (
-                select(Satellite)
-                .where(or_(*conditions))
-                .order_by(Satellite.norad_id)
-                .limit(limit)
+                select(Satellite).where(or_(*conditions)).order_by(Satellite.norad_id).limit(limit)
             )
         rows = (await self._session.execute(stmt)).scalars().all()
         return [_to_record(sat) for sat in rows]

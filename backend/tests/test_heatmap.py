@@ -66,10 +66,7 @@ def test_aggregate_orbital_bins_returns_documented_shape() -> None:
     # The lower edge of the second altitude band is the first edge plus
     # the step, by construction.
     assert matrix.altitude_bands[1] == HEATMAP_ALTITUDE_MIN_KM + HEATMAP_ALTITUDE_STEP_KM
-    assert (
-        matrix.inclination_bands[1]
-        == HEATMAP_INCLINATION_MIN_DEG + HEATMAP_INCLINATION_STEP_DEG
-    )
+    assert matrix.inclination_bands[1] == HEATMAP_INCLINATION_MIN_DEG + HEATMAP_INCLINATION_STEP_DEG
     assert matrix.total_satellites == 0
     assert all(c == 0 for row in matrix.counts for c in row)
 
@@ -146,12 +143,8 @@ async def test_compute_conjunctions_timeline_validates_window() -> None:
 # A 530 km / 53 deg orbit (≈ Starlink-like) used as the seed TLE for the
 # integration tests. Mean motion ~15.05 rev/day and eccentricity tightened
 # so the SGP4 record agrees with the textbook 530 km altitude.
-_LINE1_TPL: str = (
-    "1 {nid:05d}U 19074A   24001.00000000  .00000000  00000-0  00000+0 0    01"
-)
-_LINE2_TPL: str = (
-    "2 {nid:05d}  53.0000   0.0000 0000000   0.0000   0.0000 15.05000000    02"
-)
+_LINE1_TPL: str = "1 {nid:05d}U 19074A   24001.00000000  .00000000  00000-0  00000+0 0    01"
+_LINE2_TPL: str = "2 {nid:05d}  53.0000   0.0000 0000000   0.0000   0.0000 15.05000000    02"
 
 
 def _seed_tle_lines(norad_id: int) -> tuple[str, str]:

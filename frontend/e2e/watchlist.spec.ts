@@ -31,10 +31,7 @@ test.describe('watchlist', () => {
     await button.click();
     await expect(button).toHaveAttribute('aria-pressed', 'true');
 
-    const stored = await page.evaluate(
-      (key) => window.localStorage.getItem(key),
-      STORAGE_KEY
-    );
+    const stored = await page.evaluate((key) => window.localStorage.getItem(key), STORAGE_KEY);
     expect(stored).toBe(`[${WATCHED_NORAD_ID}]`);
 
     // Clean up so subsequent tests start clean.

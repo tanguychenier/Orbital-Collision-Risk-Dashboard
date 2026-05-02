@@ -53,7 +53,10 @@ export type AlertFormValidationResult = AlertFormValidationOk | AlertFormValidat
  * so operators can paste catalog dumps.
  */
 export function parseNoradIds(raw: string): number[] {
-  const tokens = raw.split(/[,\s]+/g).map((t) => t.trim()).filter((t) => t.length > 0);
+  const tokens = raw
+    .split(/[,\s]+/g)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
   const out = new Set<number>();
   for (const tok of tokens) {
     if (!/^\d+$/.test(tok)) continue;
