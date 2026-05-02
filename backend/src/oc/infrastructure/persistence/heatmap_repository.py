@@ -159,8 +159,10 @@ def _orbital_bin_from_tle(line1: str, line2: str) -> OrbitalBin | None:
     # the perigee + apogee average is equivalent up to first order and
     # avoids surfacing eccentricity in the binning grid.
     mean_altitude_km = (
-        sma_km * (1.0 - eccentricity) - _EARTH_RADIUS_KM
-        + sma_km * (1.0 + eccentricity) - _EARTH_RADIUS_KM
+        sma_km * (1.0 - eccentricity)
+        - _EARTH_RADIUS_KM
+        + sma_km * (1.0 + eccentricity)
+        - _EARTH_RADIUS_KM
     ) / 2.0
     inclination_rad = float(sat.inclo)
     inclination_deg = math.degrees(inclination_rad)

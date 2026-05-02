@@ -90,18 +90,12 @@ function resetForm(): void {
   <div class="flex flex-col flex-1 min-h-screen">
     <HeaderBar />
 
-    <main
-      class="flex-1 mx-auto w-full max-w-2xl px-4 py-6 sm:py-10"
-      data-testid="alerts-view"
-    >
-      <h2 class="text-xl sm:text-2xl font-semibold tracking-tight mb-2">
-        Conjunction alerts
-      </h2>
+    <main class="flex-1 mx-auto w-full max-w-2xl px-4 py-6 sm:py-10" data-testid="alerts-view">
+      <h2 class="text-xl sm:text-2xl font-semibold tracking-tight mb-2">Conjunction alerts</h2>
       <p class="text-sm text-white/70 mb-6">
-        Get a Discord (or webhook) notification, or an email, every time a
-        close approach drops below your threshold for any of the satellites
-        you watch. No accounts, no logins. The manage URL we hand back is
-        the only key.
+        Get a Discord (or webhook) notification, or an email, every time a close approach drops
+        below your threshold for any of the satellites you watch. No accounts, no logins. The manage
+        URL we hand back is the only key.
       </p>
 
       <form
@@ -123,8 +117,7 @@ function resetForm(): void {
             autocomplete="off"
           />
           <p class="text-xs text-white/50 mt-1">
-            Discord webhook URLs are accepted as-is; any RFC-compatible
-            email address works too.
+            Discord webhook URLs are accepted as-is; any RFC-compatible email address works too.
           </p>
         </div>
 
@@ -141,8 +134,7 @@ function resetForm(): void {
             autocomplete="off"
           />
           <p class="text-xs text-white/50 mt-1">
-            Comma-separated NORAD ids of the satellites you watch
-            (max {{ MAX_NORAD_IDS }}).
+            Comma-separated NORAD ids of the satellites you watch (max {{ MAX_NORAD_IDS }}).
           </p>
         </div>
 
@@ -172,23 +164,14 @@ function resetForm(): void {
             />
           </div>
           <p class="text-xs text-white/50 mt-1">
-            We notify you when a predicted close approach is at or below
-            this distance.
+            We notify you when a predicted close approach is at or below this distance.
           </p>
         </div>
 
-        <div
-          v-if="visibleErrors.length > 0"
-          class="space-y-1"
-          data-testid="alerts-form-errors"
-        >
-          <Message
-            v-for="msg in visibleErrors"
-            :key="msg"
-            severity="error"
-            :closable="false"
-            >{{ msg }}</Message
-          >
+        <div v-if="visibleErrors.length > 0" class="space-y-1" data-testid="alerts-form-errors">
+          <Message v-for="msg in visibleErrors" :key="msg" severity="error" :closable="false">{{
+            msg
+          }}</Message>
         </div>
 
         <Message
@@ -210,15 +193,10 @@ function resetForm(): void {
         </div>
       </form>
 
-      <section
-        v-else
-        class="space-y-4"
-        data-testid="alerts-success"
-      >
+      <section v-else class="space-y-4" data-testid="alerts-success">
         <Message severity="success" :closable="false">
-          Subscription created. You will receive a notification the next time
-          a conjunction below your threshold touches one of the satellites you
-          watch.
+          Subscription created. You will receive a notification the next time a conjunction below
+          your threshold touches one of the satellites you watch.
         </Message>
 
         <div>
@@ -244,8 +222,8 @@ function resetForm(): void {
         </div>
 
         <Message severity="warn" :closable="false">
-          Save this URL now -- it is the only way to inspect or unsubscribe.
-          We do not store any other identifier and cannot recover it for you.
+          Save this URL now -- it is the only way to inspect or unsubscribe. We do not store any
+          other identifier and cannot recover it for you.
         </Message>
 
         <Button

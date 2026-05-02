@@ -13,10 +13,7 @@ import type {
 export async function createAlertSubscription(
   payload: AlertSubscriptionCreate
 ): Promise<AlertSubscriptionCreated> {
-  const { data } = await apiClient.post<AlertSubscriptionCreated>(
-    '/alerts/subscriptions',
-    payload
-  );
+  const { data } = await apiClient.post<AlertSubscriptionCreated>('/alerts/subscriptions', payload);
   return data;
 }
 
@@ -28,10 +25,9 @@ export async function fetchAlertSubscription(
   id: string,
   token: string
 ): Promise<AlertSubscriptionPublic> {
-  const { data } = await apiClient.get<AlertSubscriptionPublic>(
-    `/alerts/subscriptions/${id}`,
-    { params: { token } }
-  );
+  const { data } = await apiClient.get<AlertSubscriptionPublic>(`/alerts/subscriptions/${id}`, {
+    params: { token }
+  });
   return data;
 }
 

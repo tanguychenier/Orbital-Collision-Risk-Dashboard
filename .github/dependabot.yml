@@ -1,5 +1,10 @@
 version: 2
 updates:
+  # Skipping major version bumps in every ecosystem below. Framework /
+  # toolchain majors (FastAPI, SQLAlchemy, Pydantic, ESLint, TypeScript,
+  # Pinia, Vue, Python, Node, Nginx, GitHub Actions) tend to break the
+  # build and we want to vet those manually rather than auto-open PRs
+  # that pile up unmerged.
   - package-ecosystem: pip
     directory: /backend
     schedule:
@@ -14,6 +19,9 @@ updates:
     labels:
       - dependencies
       - backend
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: /frontend
@@ -41,6 +49,9 @@ updates:
           - "vue-*"
           - "@vue/*"
           - "vite-plugin-vue"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
@@ -54,6 +65,9 @@ updates:
     labels:
       - dependencies
       - ci
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
     directory: /backend
@@ -67,6 +81,9 @@ updates:
     labels:
       - dependencies
       - docker
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
     directory: /frontend
@@ -80,3 +97,6 @@ updates:
     labels:
       - dependencies
       - docker
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

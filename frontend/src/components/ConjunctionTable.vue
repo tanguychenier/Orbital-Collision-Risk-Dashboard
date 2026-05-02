@@ -45,8 +45,7 @@ const onlyWatched = ref<boolean>(false);
 const visibleRows = computed<ConjunctionListItem[]>(() => {
   if (!onlyWatched.value) return [...props.rows];
   return props.rows.filter(
-    (r) =>
-      watchlist.isWatched(r.sat_a.norad_id) || watchlist.isWatched(r.sat_b.norad_id)
+    (r) => watchlist.isWatched(r.sat_a.norad_id) || watchlist.isWatched(r.sat_b.norad_id)
   );
 });
 

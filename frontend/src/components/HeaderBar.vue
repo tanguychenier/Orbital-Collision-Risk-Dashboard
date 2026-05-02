@@ -98,10 +98,10 @@ const aboutLinks: ReadonlyArray<{ label: string; href: string; icon: string }> =
           />
         </RouterLink>
         <a
-          href="https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard"
+          href="https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard"
           target="_blank"
           rel="noopener noreferrer"
-          class="hidden sm:inline-flex"
+          class="inline-flex"
         >
           <Button
             severity="secondary"
@@ -110,15 +110,17 @@ const aboutLinks: ReadonlyArray<{ label: string; href: string; icon: string }> =
             :aria-label="t('nav.github')"
             icon="pi pi-github"
             :label="t('nav.github')"
+            :pt="{ label: { class: 'hidden sm:inline' } }"
           />
         </a>
         <Button
           severity="secondary"
           text
           size="small"
-          class="hidden md:inline-flex"
+          icon="pi pi-info-circle"
           :label="t('nav.about')"
           :aria-label="t('nav.about')"
+          :pt="{ label: { class: 'hidden md:inline' } }"
           data-testid="about-button"
           @click="aboutOpen = true"
         />
@@ -143,15 +145,16 @@ const aboutLinks: ReadonlyArray<{ label: string; href: string; icon: string }> =
       :style="{ width: '32rem', maxWidth: '90vw' }"
     >
       <p class="text-sm leading-relaxed">
-        <span class="font-semibold">Orbital Conjunctions</span> is an
-        open-source dashboard tracking close-approach events between
-        satellites in real time. Built by
+        <span class="font-semibold">Orbital Conjunctions</span> is an open-source dashboard tracking
+        close-approach events between satellites in real time. Built by
         <a
           href="https://www.tansoftware.com"
           target="_blank"
           rel="noopener noreferrer"
           class="underline decoration-dotted hover:text-cyan-300"
-        >Tansoftware</a> &mdash; Tanguy Chénier. Released under the MIT licence.
+          >Tansoftware</a
+        >
+        &mdash; Tanguy Chénier. Released under the MIT licence.
       </p>
       <p class="text-sm leading-relaxed mt-3">
         Programmatic access:
@@ -161,25 +164,32 @@ const aboutLinks: ReadonlyArray<{ label: string; href: string; icon: string }> =
           rel="noopener noreferrer"
           class="underline decoration-dotted hover:text-cyan-300"
           data-testid="api-docs-link"
-        >Swagger UI</a> &middot;
+          >Swagger UI</a
+        >
+        &middot;
         <a
           href="/redoc"
           target="_blank"
           rel="noopener noreferrer"
           class="underline decoration-dotted hover:text-cyan-300"
-        >ReDoc</a> &middot;
+          >ReDoc</a
+        >
+        &middot;
         <a
           href="/api/calendar.ics"
           target="_blank"
           rel="noopener noreferrer"
           class="underline decoration-dotted hover:text-cyan-300"
-        >iCalendar feed</a> &middot;
+          >iCalendar feed</a
+        >
+        &middot;
         <a
           href="/api/conjunctions.csv"
           target="_blank"
           rel="noopener noreferrer"
           class="underline decoration-dotted hover:text-cyan-300"
-        >CSV export</a>.
+          >CSV export</a
+        >.
       </p>
       <ul class="mt-4 grid gap-2">
         <li v-for="link in aboutLinks" :key="link.href">

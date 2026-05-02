@@ -203,9 +203,7 @@ async def test_conjunction_detail_404(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_calendar_feed_is_valid_ical(
-    client: AsyncClient, db_session: AsyncSession
-) -> None:
+async def test_calendar_feed_is_valid_ical(client: AsyncClient, db_session: AsyncSession) -> None:
     """``/api/calendar.ics`` returns a single VEVENT for the seeded conjunction."""
     seeded = await _seed_database(db_session)
     response = await client.get("/api/calendar.ics")
@@ -240,9 +238,7 @@ async def test_calendar_feed_filters_by_norad_id(
 
 
 @pytest.mark.asyncio
-async def test_conjunctions_csv_export(
-    client: AsyncClient, db_session: AsyncSession
-) -> None:
+async def test_conjunctions_csv_export(client: AsyncClient, db_session: AsyncSession) -> None:
     """``/api/conjunctions.csv`` streams a parseable CSV with a header row."""
     seeded = await _seed_database(db_session)
     response = await client.get("/api/conjunctions.csv")
@@ -273,6 +269,28 @@ async def test_conjunctions_csv_filters_by_norad_id(
     assert response.status_code == 200
     body = response.text
     assert len(body.splitlines()) == 1  # header only
+
+
+@pytest.mark.asyncio
+async def test_satellite_tle_export(client: AsyncClient, db_session: AsyncSession) -> None:
+    """``/api/satellites/{id}/tle.txt`` returns the 3-line TLE as plain text."""
+    await _seed_database(db_session)
+    response = await client.get("/api/satellites/10001/tle.txt")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+    assert "attachment" in response.headers.get("content-disposition", "")
+    body = response.text
+    lines = body.splitlines()
+    assert lines[0] == "ALPHA-1"
+    assert lines[1].startswith("1 10001")
+    assert lines[2].startswith("2 10001")
+
+
+@pytest.mark.asyncio
+async def test_satellite_tle_export_404(client: AsyncClient) -> None:
+    """An unknown identifier returns a 404 with a JSON ``detail``."""
+    response = await client.get("/api/satellites/99999/tle.txt")
+    assert response.status_code == 404
 
 
 @pytest.mark.asyncio

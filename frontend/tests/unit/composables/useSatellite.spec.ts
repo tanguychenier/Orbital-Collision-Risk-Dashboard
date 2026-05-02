@@ -7,11 +7,7 @@ import {
   useSatelliteConjunctions,
   useSatelliteSearch
 } from '@/composables/useSatellite';
-import type {
-  ConjunctionListItem,
-  Satellite,
-  SatelliteDetailResponse
-} from '@/api/types';
+import type { ConjunctionListItem, Satellite, SatelliteDetailResponse } from '@/api/types';
 
 interface SatelliteState {
   data: SatelliteDetailResponse | null | undefined;

@@ -79,7 +79,8 @@ function handleSelect(event: AutoCompleteOptionSelectEvent): void {
         >
           <span class="font-medium text-sm truncate">{{ option.name }}</span>
           <span class="text-[11px] text-white/50 tabular-nums">
-            NORAD {{ option.norad_id }}<span v-if="option.country"> &middot; {{ option.country }}</span>
+            NORAD {{ option.norad_id
+            }}<span v-if="option.country"> &middot; {{ option.country }}</span>
           </span>
         </div>
       </template>

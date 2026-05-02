@@ -1,11 +1,32 @@
-/* Cesium service. Imports the library statically: lazy `import('cesium')`
- * triggers a Temporal-Dead-Zone error in the production bundle because of
- * Cesium's internal cyclic dependencies. Static import side-steps it; the
- * heavy chunks are still split off via Vite's default code-splitting and
- * Cesium's CSS is loaded once on first call. */
-import * as Cesium from 'cesium';
+/* Cesium service.
+ *
+ * We deliberately do NOT do `import * as Cesium from 'cesium'`. In dev,
+ * Vite's esbuild dep optimiser pre-bundles Cesium from its ES-source
+ * tangle and the result silently fails to render the globe on Firefox
+ * 130+ (Chromium masks the bug). In production, `vite-plugin-cesium`
+ * already injects a `<script src="/cesium/Cesium.js">` tag and rewrites
+ * `import * as Cesium from 'cesium'` to read from the global. Reading
+ * the global directly works the same in both modes, so we use it -- and
+ * a dev-only Vite plugin (see `vite.config.ts`) injects the same UMD
+ * script tag in dev so `window.Cesium` is available. */
+import type * as CesiumNS from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import type { ConjunctionListItem } from '@/api/types';
+
+declare global {
+  interface Window {
+    Cesium?: typeof CesiumNS;
+  }
+}
+
+const Cesium: typeof CesiumNS = (() => {
+  if (typeof window === 'undefined' || window.Cesium === undefined) {
+    throw new Error(
+      'Cesium UMD bundle not loaded. Expected `/cesium/Cesium.js` to define window.Cesium.'
+    );
+  }
+  return window.Cesium;
+})();
 
 export interface CesiumViewerHandle {
   destroy: () => void;
@@ -77,13 +98,10 @@ export async function createGlobe(opts: InitOptions): Promise<CesiumViewerHandle
     baseLayer: ionToken
       ? undefined
       : new Cesium.ImageryLayer(
-          await Cesium.SingleTileImageryProvider.fromUrl(
-            '/earth-natural-earth-ii.jpg',
-            {
-              rectangle: Cesium.Rectangle.fromDegrees(-180, -90, 180, 90),
-              credit: new Cesium.Credit('Natural Earth II - public domain', true)
-            }
-          )
+          await Cesium.SingleTileImageryProvider.fromUrl('/earth-natural-earth-ii.jpg', {
+            rectangle: Cesium.Rectangle.fromDegrees(-180, -90, 180, 90),
+            credit: new Cesium.Credit('Natural Earth II - public domain', true)
+          })
         )
   });
   viewer.scene.globe.enableLighting = true;

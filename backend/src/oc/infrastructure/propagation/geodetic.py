@@ -51,8 +51,12 @@ def gmst_radians(when: datetime) -> float:
     """
     u = _to_utc(when)
     jd_int, jd_frac = jday(
-        u.year, u.month, u.day,
-        u.hour, u.minute, u.second + u.microsecond * 1e-6,
+        u.year,
+        u.month,
+        u.day,
+        u.hour,
+        u.minute,
+        u.second + u.microsecond * 1e-6,
     )
     jd = jd_int + jd_frac
     t = (jd - 2451545.0) / 36525.0
@@ -63,7 +67,7 @@ def gmst_radians(when: datetime) -> float:
         - 6.2e-6 * t * t * t
     )
     gmst_rad = (gmst_seconds % 86400.0) / 240.0 * math.pi / 180.0
-    return gmst_rad % (2.0 * math.pi)
+    return float(gmst_rad % (2.0 * math.pi))
 
 
 def teme_to_ecef(position_teme_km: np.ndarray, when: datetime) -> np.ndarray:

@@ -60,6 +60,26 @@ export const handlers = [
     return HttpResponse.json(filtered.slice(offset, offset + limit));
   }),
 
+  http.get(`${API}/satellites/:identifier/tle.txt`, ({ params }) => {
+    const identifier = String(params.identifier);
+    const sat = mockSatellites.find(
+      (s) => String(s.norad_id) === identifier || s.name.toLowerCase() === identifier.toLowerCase()
+    );
+    if (!sat) {
+      return new HttpResponse('satellite not found', { status: 404 });
+    }
+    const line1 = `1 ${String(sat.norad_id).padStart(5, '0')}U 19074A   26121.85416667  .00002182  00000-0  16538-3 0  9991`;
+    const line2 = `2 ${String(sat.norad_id).padStart(5, '0')}  53.0537  61.4982 0001296  82.5921 277.5247 15.06398117282113`;
+    const body = `${sat.name}\r\n${line1}\r\n${line2}\r\n`;
+    return new HttpResponse(body, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${sat.norad_id}.tle"`
+      }
+    });
+  }),
+
   http.get(`${API}/satellites/:identifier`, ({ params }) => {
     const identifier = String(params.identifier);
     const sat = findSatelliteByIdentifier(identifier);
@@ -162,7 +182,10 @@ export const handlers = [
       (c) => c.miss_distance_km <= max && new Date(c.tca).getTime() <= cutoff
     );
     const fmt = (iso: string) =>
-      new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+      new Date(iso)
+        .toISOString()
+        .replace(/[-:]/g, '')
+        .replace(/\.\d+Z$/, 'Z');
     const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//mock//EN'];
     for (const c of filtered) {
       lines.push(

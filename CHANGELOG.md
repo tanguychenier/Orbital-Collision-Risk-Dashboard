@@ -59,5 +59,5 @@ and this project adheres to
   for the full stack.
 - GitHub Actions CI running lint + typecheck + tests on every PR.
 
-[Unreleased]: https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard/releases/tag/v0.1.0
+[Unreleased]: https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard/releases/tag/v0.1.0

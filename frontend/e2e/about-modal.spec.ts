@@ -4,9 +4,9 @@
  * Domain rule: the credits / contact information of the application must be
  * presented in a modal opened from the header, NEVER repeated in the footer.
  * The modal must be reachable by mouse, keyboard, and assistive technologies,
- * and it must expose every external link required by the project's authoring
- * conventions (LinkedIn, Tan-Software organisation, personal account, company
- * website).
+ * on every supported viewport (mobile / tablet / desktop), and it must expose
+ * every external link required by the project's authoring conventions
+ * (LinkedIn, Tan-Software organisation, personal account, company website).
  */
 import { test, expect, type Page } from '@playwright/test';
 
@@ -17,7 +17,7 @@ const REQUIRED_LINKS: ReadonlyArray<{ label: RegExp; href: string }> = [
   { label: /tansoftware\.com/i, href: 'https://www.tansoftware.com' }
 ];
 
-const REPO_URL = 'https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard';
+const REPO_URL = 'https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard';
 
 async function gotoDashboard(page: Page): Promise<void> {
   await page.goto('/');

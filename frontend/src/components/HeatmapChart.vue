@@ -22,7 +22,9 @@ async function ensureChart(): Promise<ECharts | null> {
     return null;
   }
   const echarts = await import('echarts');
-  const chart = echarts.init(containerRef.value, undefined, { renderer: 'canvas' }) as unknown as ECharts;
+  const chart = echarts.init(containerRef.value, undefined, {
+    renderer: 'canvas'
+  }) as unknown as ECharts;
   instanceRef.value = chart;
   if (typeof ResizeObserver !== 'undefined') {
     const observer = new ResizeObserver(() => chart.resize());
@@ -152,6 +154,11 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="w-full h-[480px]" data-testid="heatmap-chart">
-    <div ref="containerRef" class="w-full h-full" role="img" aria-label="Altitude versus inclination heatmap" />
+    <div
+      ref="containerRef"
+      class="w-full h-full"
+      role="img"
+      aria-label="Altitude versus inclination heatmap"
+    />
   </div>
 </template>

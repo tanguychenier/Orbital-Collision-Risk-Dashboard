@@ -16,7 +16,7 @@ are the bars every PR is held to.
 ### Bootstrap
 
 ```sh
-git clone https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard.git
+git clone https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard.git
 cd Orbital-Collision-Risk-Dashboard
 
 # Backend
@@ -113,7 +113,7 @@ pip install pre-commit && pre-commit install
 
 ## Reporting bugs
 
-Use the [GitHub issue tracker](https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard/issues).
+Use the [GitHub issue tracker](https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard/issues).
 Include:
 
 - The exact command that reproduces the bug.

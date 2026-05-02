@@ -5,11 +5,7 @@ import {
   fetchSatelliteDetail,
   searchSatellites
 } from '@/api/conjunctions';
-import type {
-  ConjunctionListItem,
-  Satellite,
-  SatelliteDetailResponse
-} from '@/api/types';
+import type { ConjunctionListItem, Satellite, SatelliteDetailResponse } from '@/api/types';
 
 /** TanStack Query stale time for satellite detail (mostly static metadata). */
 const SATELLITE_DETAIL_STALE_MS = 60_000;

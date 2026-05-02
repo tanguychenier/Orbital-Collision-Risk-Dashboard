@@ -52,9 +52,7 @@ def test_teme_to_ecef_preserves_norm() -> None:
     when = datetime(2025, 6, 15, 13, 27, 31, tzinfo=UTC)
     teme = np.array([4500.0, -3300.0, 1800.0])
     ecef = teme_to_ecef(teme, when)
-    assert float(np.linalg.norm(ecef)) == pytest.approx(
-        float(np.linalg.norm(teme)), rel=1e-12
-    )
+    assert float(np.linalg.norm(ecef)) == pytest.approx(float(np.linalg.norm(teme)), rel=1e-12)
 
 
 def test_ecef_to_geodetic_equator_at_zero_meridian() -> None:

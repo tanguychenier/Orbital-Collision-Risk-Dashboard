@@ -5,7 +5,7 @@
 Please **do not** open a public GitHub issue for a security bug.
 
 Instead, open a **GitHub Security Advisory** here:
-<https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard/security/advisories/new>
+<https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard/security/advisories/new>
 
 Include:
 

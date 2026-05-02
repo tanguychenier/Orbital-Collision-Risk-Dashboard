@@ -88,18 +88,14 @@ def aggregate_orbital_bins(
     deterministic regardless of the input population.
     """
     altitude_bands = _band_edges(altitude_min_km, altitude_max_km, altitude_step_km)
-    inclination_bands = _band_edges(
-        inclination_min_deg, inclination_max_deg, inclination_step_deg
-    )
+    inclination_bands = _band_edges(inclination_min_deg, inclination_max_deg, inclination_step_deg)
     n_alt = len(altitude_bands)
     n_inc = len(inclination_bands)
     counts: list[list[int]] = [[0 for _ in range(n_inc)] for _ in range(n_alt)]
     total = 0
     for entry in bins:
         i = _bin_index(entry.altitude_km, altitude_min_km, altitude_step_km, n_alt)
-        j = _bin_index(
-            entry.inclination_deg, inclination_min_deg, inclination_step_deg, n_inc
-        )
+        j = _bin_index(entry.inclination_deg, inclination_min_deg, inclination_step_deg, n_inc)
         if i is None or j is None:
             continue
         counts[i][j] += 1

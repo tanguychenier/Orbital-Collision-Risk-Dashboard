@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const repoUrl = 'https://github.com/Tan-Software/Orbital-Collision-Risk-Dashboard';
+const repoUrl = 'https://github.com/tanguychenier/Orbital-Collision-Risk-Dashboard';
 </script>
 
 <template>

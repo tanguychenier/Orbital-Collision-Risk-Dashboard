@@ -8,10 +8,7 @@ import {
   mostCongestedInclination,
   weekOverWeekTrend
 } from '@/composables/useHeatmapInsights';
-import type {
-  ConjunctionTimelinePoint,
-  HeatmapAltitudeInclinationResponse
-} from '@/api/types';
+import type { ConjunctionTimelinePoint, HeatmapAltitudeInclinationResponse } from '@/api/types';
 
 function makeMatrix(counts: number[][]): HeatmapAltitudeInclinationResponse {
   const altitudeBands = counts.map((_, i) => 200 + i * 50);

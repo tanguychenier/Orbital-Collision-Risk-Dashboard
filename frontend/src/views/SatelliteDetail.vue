@@ -21,9 +21,7 @@ const noradId = computed<string>(() => {
   return Array.isArray(raw) ? (raw[0] ?? '') : raw;
 });
 
-const noradIdRef = computed<string | null>(() =>
-  noradId.value === '' ? null : noradId.value
-);
+const noradIdRef = computed<string | null>(() => (noradId.value === '' ? null : noradId.value));
 
 const horizonHours = ref<number>(168);
 const { data: detail, isLoading: detailLoading, isError: detailErrored } = useSatellite(noradIdRef);
@@ -39,8 +37,8 @@ const stats = computed(() => detail.value?.stats ?? null);
 const permalinkCopied = ref(false);
 
 const watchlist = useWatchlist();
-const satelliteIsWatched = computed<boolean>(() =>
-  satellite.value !== null && watchlist.isWatched(satellite.value.norad_id)
+const satelliteIsWatched = computed<boolean>(
+  () => satellite.value !== null && watchlist.isWatched(satellite.value.norad_id)
 );
 
 function toggleWatch(): void {
@@ -140,10 +138,11 @@ function setMaxDistance(): void {
                 {{ satellite.name }}
               </h2>
               <p class="text-xs text-white/50 mt-1 tabular-nums">
-                {{ t('satellite.norad') }}: <span data-testid="satellite-norad">{{ satellite.norad_id }}</span>
+                {{ t('satellite.norad') }}:
+                <span data-testid="satellite-norad">{{ satellite.norad_id }}</span>
               </p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <Button
                 :icon="satelliteIsWatched ? 'pi pi-star-fill' : 'pi pi-star'"
                 :label="satelliteIsWatched ? t('satellite.unwatch') : t('satellite.watch')"
@@ -155,9 +154,27 @@ function setMaxDistance(): void {
                 data-testid="watchlist-toggle"
                 @click="toggleWatch"
               />
+              <a
+                v-if="noradId"
+                :href="`/api/satellites/${noradId}/tle.txt`"
+                :download="`${noradId}.tle`"
+                class="inline-flex"
+                data-testid="download-tle"
+              >
+                <Button
+                  icon="pi pi-download"
+                  :label="t('satellite.downloadTle')"
+                  severity="secondary"
+                  outlined
+                  size="small"
+                  :aria-label="t('satellite.downloadTle')"
+                />
+              </a>
               <Button
                 :icon="permalinkCopied ? 'pi pi-check' : 'pi pi-link'"
-                :label="permalinkCopied ? t('satellite.permalinkCopied') : t('satellite.copyPermalink')"
+                :label="
+                  permalinkCopied ? t('satellite.permalinkCopied') : t('satellite.copyPermalink')
+                "
                 severity="secondary"
                 outlined
                 size="small"

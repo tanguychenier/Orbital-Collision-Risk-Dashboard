@@ -80,7 +80,8 @@ const messages = {
       notFound: 'Satellite not found.',
       loading: 'Loading satellite...',
       watch: 'Watch',
-      unwatch: 'Watching'
+      unwatch: 'Watching',
+      downloadTle: 'TLE'
     }
   }
 };
