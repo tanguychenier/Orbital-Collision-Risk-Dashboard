@@ -11,9 +11,17 @@
 - Fetches public TLE catalogs every 4 hours (CelesTrak `active` group).
 - Propagates each satellite with **SGP4** over a 72-hour horizon.
 - Detects close approaches with a tiered screening pipeline (perigee/apogee filter -> coarse 60 s sweep -> sub-second TCA refinement) so 30 000+ objects can be screened in minutes on a single core.
+- Plots every conjunction at the **real WGS-84 sub-satellite point of both objects at TCA**, with a polyline drawn between them. No fictitious markers.
 - Stores everything in PostgreSQL (TimescaleDB-friendly schema).
-- Exposes a clean REST API (`/api/health`, `/api/stats`, `/api/satellites`, `/api/conjunctions`).
-- Serves a Vue 3 dashboard with a Cesium globe, live stats, sortable conjunctions table and detail dialog.
+- Exposes a clean REST API for both casual and operator-grade use:
+  - `/api/health`, `/api/stats` - liveness + dashboard summaries.
+  - `/api/satellites`, `/api/satellites/{id}` - catalogue browse + permalink for any satellite.
+  - `/api/conjunctions` - JSON list with sub-satellite points at TCA.
+  - `/api/conjunctions.csv` - same data as a spreadsheet download.
+  - `/api/calendar.ics` - **RFC 5545 calendar feed**; subscribe from Google / Outlook / Apple Calendar so close approaches show up next to your meetings.
+  - `/api/heatmap/*` - altitude x inclination congestion matrix and 30-day conjunction-count timeline.
+  - `/api/alerts/subscriptions` - register a **webhook or email** to be notified when one of *your* satellites has a close approach.
+- Serves a Vue 3 dashboard with a Cesium globe, live stats, sortable conjunctions table, satellite search bar with permalink pages, congestion heatmap, alerts page, and one-click CSV / iCal export.
 
 ## Architecture
 
@@ -73,6 +81,30 @@ pnpm dev              # http://localhost:5173 with MSW fixtures by default
 
 The frontend ships with [Mock Service Worker](https://mswjs.io/) fixtures, so you can run it **without** the backend (`VITE_USE_MSW=true`).
 
+## API quickstart
+
+No API key required. Examples use `httpie`-friendly syntax; `curl` works the same.
+
+```sh
+# JSON list of upcoming conjunctions, sub-satellite point at TCA included.
+curl 'http://localhost:8000/api/conjunctions?max_distance_km=5&hours=72'
+
+# Spreadsheet-friendly CSV with the same columns.
+curl -OJ 'http://localhost:8000/api/conjunctions.csv?max_distance_km=5&hours=168'
+
+# iCalendar feed for the satellites you care about. Add this URL as a
+# new calendar in Google / Outlook / Apple Calendar:
+# http://localhost:8000/api/calendar.ics?norad_id=25544&norad_id=44713&hours=168
+curl 'http://localhost:8000/api/calendar.ics?norad_id=25544&hours=168'
+
+# Subscribe a webhook for one of your satellites.
+curl -X POST http://localhost:8000/api/alerts/subscriptions \
+  -H 'content-type: application/json' \
+  -d '{"email_or_webhook_url":"https://hooks.slack.com/...","norad_ids":[25544],"miss_distance_km_threshold":5}'
+```
+
+The full schema is browsable at `/docs` (Swagger UI) and `/redoc`.
+
 ## Testing
 
 | Layer | Command | What it covers |
@@ -106,11 +138,10 @@ Orbital-Collision-Risk-Dashboard/
 │   ├── alembic/                # migrations
 │   ├── src/oc/
 │   │   ├── main.py             # FastAPI app factory
-│   │   ├── api/                # Routers (adapters in)
-│   │   ├── services/           # Use cases / orchestration
-│   │   ├── models.py           # SQLAlchemy adapters
-│   │   ├── schemas.py          # Pydantic (HTTP boundary)
-│   │   └── workers/            # APScheduler periodic tasks
+│   │   ├── domain/             # entities + value objects (no framework imports)
+│   │   ├── application/        # ports (Protocols) + use cases
+│   │   ├── infrastructure/     # http, persistence (SQLAlchemy), propagation (sgp4 + geodetic), tle_sources, scheduler, alerts
+│   │   └── interface/          # Pydantic schemas (HTTP boundary)
 │   └── tests/                  # pytest, in-memory SQLite for fast feedback
 ├── frontend/
 │   ├── package.json            # pnpm
@@ -124,8 +155,9 @@ Orbital-Collision-Risk-Dashboard/
 │   │   ├── services/cesium.ts  # lazy-loaded 3D globe
 │   │   ├── components/         # presentational
 │   │   └── views/Dashboard.vue
+│   ├── public/                 # static assets (Cesium NaturalEarthII tile, favicon)
 │   ├── tests/unit/             # Vitest
-│   └── e2e/                    # Playwright + screenshots/{mobile,tablet,desktop}/
+│   └── e2e/                    # Playwright across {chrome,edge,firefox} x {mobile,tablet,desktop}
 └── .github/workflows/ci.yml    # lint + typecheck + tests on every PR
 ```
 
