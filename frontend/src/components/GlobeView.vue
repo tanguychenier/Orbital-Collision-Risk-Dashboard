@@ -80,7 +80,11 @@ onBeforeUnmount(() => {
       class="absolute inset-0 grid place-items-center bg-slate-950/80 text-white/80"
     >
       <div class="flex flex-col items-center gap-3">
-        <ProgressSpinner style="width: 40px; height: 40px" stroke-width="4" />
+        <ProgressSpinner
+          style="width: 40px; height: 40px"
+          stroke-width="4"
+          :aria-label="t('globe.loading')"
+        />
         <p class="text-sm">{{ t('globe.loading') }}</p>
       </div>
     </div>

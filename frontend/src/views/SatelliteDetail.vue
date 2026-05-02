@@ -110,7 +110,11 @@ function setMaxDistance(): void {
         class="rounded-xl border border-white/10 bg-slate-900/40 p-8 grid place-items-center"
       >
         <div class="flex flex-col items-center gap-3 text-white/70">
-          <ProgressSpinner style="width: 40px; height: 40px" stroke-width="4" />
+          <ProgressSpinner
+            style="width: 40px; height: 40px"
+            stroke-width="4"
+            :aria-label="t('satellite.loading')"
+          />
           <p class="text-sm">{{ t('satellite.loading') }}</p>
         </div>
       </div>
