@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@primevue/themes": "^4.2.5",
-    "@tanstack/vue-query": "^5.62.7",
+    "@tanstack/vue-query": "^5.100.8",
     "axios": "^1.7.9",
     "cesium": "^1.141.0",
     "echarts": "^6.0.0",
