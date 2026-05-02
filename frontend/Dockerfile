@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # Multi-stage build: pnpm install + build, then nginx serves the static SPA.
 # ----------------------------------------------------------------------------
-FROM node:20-alpine AS builder
+FROM node:25-alpine AS builder
 ENV PNPM_HOME=/pnpm \
     PATH=/pnpm:$PATH \
     CI=true
