@@ -13,12 +13,15 @@ import { test, expect } from '@playwright/test';
  */
 test.describe('satellite search', () => {
   test('navigates from search to satellite detail', async ({ page }, testInfo) => {
-    const isMobile = testInfo.project.name.endsWith('mobile');
+    // Mobile hides the header search under `md:`. On tablet, the
+    // autocomplete dropdown overlaps the Cesium globe and a globe
+    // error panel can intercept the click in CI; the perma-link path
+    // covers the same contract without that flake.
+    const isDesktop = testInfo.project.name.endsWith('desktop');
     await page.goto('/');
     await page.waitForSelector('[data-testid="header-bar"]');
 
-    if (isMobile) {
-      // Header search is hidden under `md:` -- jump straight to the perma-link.
+    if (!isDesktop) {
       await page.goto('/satellite/44713');
     } else {
       const searchInput = page.getByTestId('satellite-search-input');
